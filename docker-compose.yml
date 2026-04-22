@@ -7,6 +7,7 @@ services:
       - .env
     environment:
       - PYTHONUNBUFFERED=1  # Ensures logs appear in 'docker logs' immediately
+      - COMMANDS_FILE=commands/commands.json
 #      - LOG_FILE=/app/commands/bot_log.txt  # Leave blank or remove to disable file logging
     volumes:
       - ./commands:/app/commands  # Links your local folder to the container
