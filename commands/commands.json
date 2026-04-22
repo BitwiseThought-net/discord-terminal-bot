@@ -19,7 +19,13 @@
   "bot-info": {
     "123456789123456789": [
       {
-        "comment": "Restricted Admin Commands",
+        "comment": "Channel Commands! ...for role (111111111) and that special user who isn't in the role (123456789), but not those two untrusted neer-do-wells (222222222, & 333333333) nor that treacherous group (987654321).",
+        "permissions": {
+          "whitelist_roles": [111111111],
+          "blacklist_users": [222222222,333333333],
+          "whitelist_users": [123456789],
+          "blacklist_roles": [987654321]
+        },
         "commands": {
           "uptime": "uptime -p",
           "disk": "df -h",
