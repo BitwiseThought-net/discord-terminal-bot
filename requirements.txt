@@ -1,0 +1,7 @@
+# --- Discord Bot Core ---
+discord.py==2.4.0
+
+# --- Environment Management ---
+# Using python-dotenv to support local development outside of Docker
+# Required for .env file loading
+python-dotenv

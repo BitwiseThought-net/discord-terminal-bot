@@ -1,0 +1,18 @@
+services:
+  discord-funfacts-bot:
+    build: .
+    container_name: discord-funfacts-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1  # Ensures logs appear in 'docker logs' immediately
+#      - LOG_FILE=/app/commands/bot_log.txt  # Leave blank or remove to disable file logging
+    volumes:
+      - ./commands:/app/commands  # Links your local folder to the container
+      - /var/run/docker.sock:/var/run/docker.sock  # The "Magic" Bridge
+      - /var/lib/docker/containers:/app/dcon:ro
+    user: root  # Required to have permission to use the socket
+
+
+
