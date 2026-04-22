@@ -46,6 +46,7 @@ The bot reads `commands/commands.json` in real-time for every command. You can u
 ### Structure
 Each **Channel ID** (or the wildcards `"*"` or `"all"`) maps to an **Array (List)** of command blocks. This allows you to stack different sets of commands with varying permissions in the same channel.
 
+Example (also see [commands/commands.json](https://github.com/BitwiseThought-net/discord-funfacts-bot/blob/main/commands/commands.json)) :
 ```json
 {
   "*": [
@@ -53,7 +54,8 @@ Each **Channel ID** (or the wildcards `"*"` or `"all"`) maps to an **Array (List
       "comment": "Global commands available in every channel to everyone",
       "commands": {
         "ping": "echo 'pong'",
-        "uptime": "uptime -p"
+        "uptime": "uptime -p",
+        "MoooooNooo": "/app/commands/no-as-a-service.sh | cowsay"
       }
     }
   ],
@@ -79,6 +81,7 @@ Each **Channel ID** (or the wildcards `"*"` or `"all"`) maps to an **Array (List
     }
   ]
 }
+```
 
 ## 🚀 4. Installation & Deployment
 Follow these steps to deploy the bot on your server:
@@ -94,16 +97,21 @@ Once deployed, the bot integrates into your server via Slash Commands:
 - Context-Aware Autocomplete: The command dropdown list dynamically filters aliases based on your specific User ID, Roles, and the Current Channel. Commands you are not authorized to run will be hidden.
 - Real-time Config: You can edit commands.json on your server at any time. Changes take effect instantly without needing to restart the container.
 - Permission Hierarchy:
-  # Owner Bypass: The OWNER_ID defined in your .env file is exempt from all restrictions and can run any command.
-  # Blacklist Priority: If a user or their role is blacklisted in a specific command block, they are denied immediately, even if they are whitelisted elsewhere.
-  # Optional Permissions: If the permissions section or a specific whitelist is missing, the command set is public. If a whitelist is present, only those listed IDs/Roles can use the commands.
-  # Wildcards: Command blocks assigned to "*" or "all" are automatically combined with channel-specific commands and available globally.
+  1. Owner Bypass: The OWNER_ID defined in your .env file is exempt from all restrictions and can run any command.
+  2. Blacklist Priority: If a user or their role is blacklisted in a specific command block, they are denied immediately, even if they are whitelisted elsewhere.
+  3. Optional Permissions: If the permissions section or a specific whitelist is missing, the command set is public. If a whitelist is present, only those listed IDs/Roles can use the commands.
+  4. Wildcards: Command blocks assigned to "*" or "all" are automatically combined with channel-specific commands and available globally.
 
 ## 🛡 6. Security Information
 Security is critical when allowing terminal access via a chat interface:
-- Docker Socket: Mounting /var/run/docker.sock provides the bot with root-level access to your Docker engine. This allows it to manage other containers. Only whitelist trusted users and roles.
-- Isolation: The bot is restricted to its container environment. It cannot access host system files unless they are specifically mounted as volumes in docker-compose.yml.
-- Script Safety: When running shell scripts (.sh), ensure they have execution permissions on the host (e.g., chmod +x script.sh).
-- Audit Trail: Every command attempt (Authorized or Denied) is logged to the Docker console and the optional LOG_FILE defined in your environment, providing a full history of user activity.
-- Fail-safe Defaults: If the commands.json file is malformed or a permission block is missing, the bot handles errors gracefully without crashing, defaulting to the safest restricted state.
+- **Docker Socket**:
+  Mounting /var/run/docker.sock provides the bot with root-level access to your Docker engine. This allows it to manage other containers. Only whitelist trusted users and roles.
+- **Isolation**:
+  The bot is restricted to its container environment. It cannot access host system files unless they are specifically mounted as volumes in docker-compose.yml.
+- **Script Safety**:
+  When running shell scripts (.sh), ensure they have execution permissions on the host (e.g., chmod +x script.sh). With great power comes great... something something.
+- **Audit Trail**:
+  Every command attempt (Authorized or Denied) is logged to the Docker console and the optional LOG_FILE defined in your environment, providing a full history of user activity.
+- **Fail-safe Defaults**:
+  If the commands.json file is malformed or a permission block is missing, the bot handles errors gracefully without crashing, defaulting to the safest restricted state.
 
