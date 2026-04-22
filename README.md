@@ -49,39 +49,49 @@ Each **Channel ID** (or the wildcards `"*"` or `"all"`) maps to an **Array (List
 Example (also see [commands/commands.json](https://github.com/BitwiseThought-net/discord-funfacts-bot/blob/main/commands/commands.json)) :
 ```json
 {
-  "*": [
-    {
-      "comment": "Global commands available in every channel to everyone",
-      "commands": {
-        "ping": "echo 'pong'",
-        "uptime": "uptime -p",
-        "MoooooNooo": "/app/commands/no-as-a-service.sh | cowsay"
+  "funfacts": {
+    "parameter_name": "about",
+    "*": [
+      {
+        "comment": "Global commands available in every channel to everyone",
+        "commands": {
+          "life": "fortune",
+          "mooooooooooooooo": "fortune | cowsay",
+          "MOOOOOO": "/app/commands/no-as-a-service.sh | cowsay"
+        }
       }
-    }
-  ],
-  "YOUR_CHANNEL_ID_HERE": [
-    {
-      "comment": "Restricted Admin Commands",
-      "permissions": {
-        "whitelist_roles": [987654321],
-        "blacklist_users": [123456789],
-        "whitelist_users": [],
-        "blacklist_roles": []
+    ],
+  }
+  "server": {
+    "parameter_name": "info",
+    "YOUR_CHANNEL_ID_HERE": [
+      {
+        "comment": "Restricted Admin Commands",
+        "permissions": {
+          "whitelist_roles": [987654321],
+          "blacklist_users": [123456789],
+          "whitelist_users": [],
+          "blacklist_roles": []
+        },
+        "commands": {
+          "restart_web": "docker restart website_container",
+          "update_scripts": "sh /app/commands/update.sh"
+        }
       },
-      "commands": {
-        "restart_web": "docker restart website_container",
-        "update_scripts": "sh /app/commands/update.sh"
+      {
+        "comment": "Public commands allowed in this specific channel",
+        "commands": {
+          "list_backups": "ls /app/commands/backups"
+        }
       }
-    },
-    {
-      "comment": "Public commands allowed in this specific channel",
-      "commands": {
-        "list_backups": "ls /app/commands/backups"
-      }
-    }
-  ]
+    ]
+  }
 }
 ```
+
+Example:
+<img width="514" height="563" alt="image" src="https://github.com/user-attachments/assets/a8e19f35-7084-4b18-a2af-dda013da4663" />
+
 
 ## 🚀 4. Installation & Deployment
 Follow these steps to deploy the bot on your server:
