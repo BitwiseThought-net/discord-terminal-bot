@@ -57,7 +57,7 @@ Example (also see [commands/commands.json](https://github.com/BitwiseThought-net
         "commands": {
           "life": "fortune",
           "mooooooooooooooo": "fortune | cowsay",
-          "MOOOOOO": "/app/commands/no-as-a-service.sh | cowsay"
+          "MOOOOOO!!": "/app/commands/no-as-a-service.sh | cowsay"
         }
       }
     ],
@@ -89,7 +89,10 @@ Example (also see [commands/commands.json](https://github.com/BitwiseThought-net
 }
 ```
 
-Example:
+Examples:
+
+<img width="427" height="283" alt="image" src="https://github.com/user-attachments/assets/b2237735-db16-443d-867e-b0c5fac04236" />
+
 <img width="514" height="563" alt="image" src="https://github.com/user-attachments/assets/a8e19f35-7084-4b18-a2af-dda013da4663" />
 
 
