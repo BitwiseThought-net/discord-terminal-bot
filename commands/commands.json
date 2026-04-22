@@ -1,44 +1,50 @@
 {
-  "*": [
-    {
-      "comment": "Global commands available in every channel to everyone",
-      "commands": {
-        "GuessWhat": "echo 'Chicken butt!'",
-        "me": "echo 'You lost THE GAME'",
-        "fortunes": "fortune -a",
-        "moo": "fortune -a | cowsay",
-        "mooooooooooooooo": "fortune -l | cowsay",
-        "no": "/app/commands/no-as-a-service.sh",
-        "nooooooooooooooo": "/app/commands/no-as-a-service.sh | cowsay"
+  "funfact": {
+    "*": [
+      {
+        "comment": "Global commands available in every channel to everyone",
+        "commands": {
+          "GuessWhat": "echo 'Chicken butt!!'",
+          "me": "echo 'You lost THE GAME'",
+          "date": "date",
+          "fortunes": "fortune -a",
+          "moo": "fortune -a | cowsay",
+          "mooooooooooooooo": "fortune -l | cowsay",
+          "no": "/app/commands/no-as-a-service.sh",
+          "nooooooooooooooo": "/app/commands/no-as-a-service.sh | cowsay"
+        }
       }
-    }
-  ],
-  "12345678901234567890": [
-    {
-      "comment": "Channel Commands! ...for role (111111111) and that special user who isn't in the role (123456789), but not those two untrusted neer-do-wells (222222222, & 333333333) nor that treacherous group (987654321).",
-      "permissions": {
-        "whitelist_roles": [111111111],
-        "blacklist_users": [222222222,333333333],
-        "whitelist_users": [123456789],
-        "blacklist_roles": [987654321]
-      },
-      "commands": {
-        "disk": "df -h",
-        "memory": "free -h",
-        "ping_github": "ping -c 4 github.com",
-        "disk_usage": "df -h"
+    ]
+  },
+  "bot-info": {
+    "123456789123456789": [
+      {
+        "comment": "Restricted Admin Commands",
+        "commands": {
+          "uptime": "uptime -p",
+          "disk": "df -h",
+          "status": "uptime",
+          "memory": "free -h",
+          "ping_google": "ping -c 4 google.com",
+          "disk_usage": "df -h",
+          "logs": "tail -n 20 commands/bot_log.txt"
+        }
       }
-    },
-    {
-      "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
-      "permissions": {
-        "blacklist_users": [333333333]
-      },
-      "commands": {
-        "uptime": "uptime -p",
-        "date": "date",
-        "status": "uptime"
+    ]
+  },
+  "server-info": {
+    "987654321987654321": [
+      {
+        "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
+        "permissions": {
+          "blacklist_users": [333333333]
+        },
+        "commands": {
+          "uptime": "uptime -p",
+          "date": "date",
+          "status": "uptime"
+        }
       }
-    }
-  ]
+    ]
+  }
 }

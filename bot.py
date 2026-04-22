@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 import json
 import asyncio
@@ -54,22 +54,19 @@ def log_text(user, channel_id, text):
         except Exception as e:
             print(f"Logging Error: Could not write to {LOG_FILE}. {e}", flush=True)
 
-
-def log_action(user, channel_id, about, status):
+def log_action(user, channel_id, slash_cmd, about, status):
     """Logs to both the Docker console and the optional LOG_FILE."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"[{timestamp}] User: {user} ({user.id}) | Channel: {channel_id} | About: {about} | Status: {status}"
-
+    log_entry = f"[{timestamp}] User: {user} ({user.id}) | Channel: {channel_id} | /{slash_cmd} about: {about} | Status: {status}"
     # Always log to Docker (Standard Output)
     print(log_entry, flush=True)
-
     # Log to file ONLY if LOG_FILE environment variable is valid
     if LOG_FILE:
         try:
             with open(LOG_FILE, 'a') as f:
                 f.write(log_entry + "\n")
         except Exception as e:
-            print(f"Logging Error: Could not write to {LOG_FILE}. {e}", flush=True)
+            print(f"Logging Error: {e}", flush=True)
 
 def is_authorized(user, permissions):
     """Checks for wildcards (* or all) and IDs in blacklist/whitelist."""
@@ -120,90 +117,96 @@ def get_combined_blocks(data, channel_id_str):
     global_all = data.get("all", [])
     return specific + global_star + global_all
 
-# 3. BOT EVENTS
-@bot.event
-async def on_ready():
-    await bot.tree.sync()
-    print(f'--- Bot Online as {bot.user} ---', flush=True)
-    if LOG_FILE:
-        print(f'File Logging: {LOG_FILE}', flush=True)
+# 3. DYNAMIC COMMAND LOGIC
+async def cmd_callback(interaction: discord.Interaction, about: str):
+    # We identify which command was called by interaction.command.name
+    cmd_name = interaction.command.name
+    data = load_data().get(cmd_name, {})
+    all_blocks = get_combined_blocks(data, str(interaction.channel_id))
 
-# 4. SLASH COMMAND & AUTOCOMPLETE
-@bot.tree.command(name="funfact", description="Run an authorized command")
-@app_commands.describe(about="The command nickname from commands.json")
-async def execute_alias(interaction: discord.Interaction, about: str):
-    data = load_data()
-    channel_id_str = str(interaction.channel_id)
-    all_blocks = get_combined_blocks(data, channel_id_str)
-
-    target_cmd = None
-    last_reason = "Command not found."
-    search_about = about.lower() # Case-insensitive normalization
+    target_cmd, last_reason = None, "Not found"
+    search_about = about.lower()
 
     for block in all_blocks:
         cmds = block.get("commands", {})
-
-        # Create a lowercase map for case-insensitive lookup
-        normalized_cmds = {k.lower(): (k, v) for k, v in cmds.items()}
-
-        if search_about in normalized_cmds:
-            actual_key, cmd_value = normalized_cmds[search_about]
+        # Create a lowercase mapping for case-insensitive lookup
+        norm_cmds = {k.lower(): (k, v) for k, v in cmds.items()}
+        if search_about in norm_cmds:
+            actual_key, cmd_value = norm_cmds[search_about]
             allowed, reason = is_authorized(interaction.user, block.get("permissions", {}))
             if allowed:
                 target_cmd = cmd_value
                 break
-            else:
-                last_reason = reason
+            else: last_reason = reason
 
     if not target_cmd:
-        log_action(interaction.user, channel_id_str, about, f"DENIED: {last_reason}")
-        await interaction.response.send_message(f"❌ Access Denied: {last_reason}", ephemeral=True)
-        return
+        log_action(interaction.user, interaction.channel_id, cmd_name, about, f"DENIED: {last_reason}")
+        return await interaction.response.send_message(f"❌ {last_reason}", ephemeral=True)
 
     await interaction.response.defer()
-
     try:
-        process = await asyncio.create_subprocess_shell(
-            target_cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
+        process = await asyncio.create_subprocess_shell(target_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
-
-        log_action(interaction.user, channel_id_str, about, "SUCCESS")
+        log_action(interaction.user, interaction.channel_id, cmd_name, about, "SUCCESS")
         result = (stdout.decode() or stderr.decode()).strip() or "Success."
-
-        if len(result) > 1900:
-            result = result[:1900] + "\n...[Truncated]..."
-
-        #await interaction.followup.send(f"**Alias:** `{alias}`\n```\n{result[:1900]}\n```")
-        await interaction.followup.send(f"`FunFact about {about}`\n```\n{result[:1900]}\n```")
-        #await interaction.followup.send(f"```\n{result}\n```")
-
+        await interaction.followup.send(f"`{cmd_name.capitalize()} about {about}`\n```\n{result[:1900]}\n```")
     except Exception as e:
-        log_action(interaction.user, channel_id_str, about, f"ERROR: {str(e)}")
-        await interaction.followup.send(f"⚠️ Error: `{str(e)}`")
+        await interaction.followup.send(f"⚠️ Error: `{e}`")
 
-@execute_alias.autocomplete('about')
-async def alias_autocomplete(interaction: discord.Interaction, current: str):
-    """Dropdown menu with case-insensitive filtering."""
-    data = load_data()
-    channel_id_str = str(interaction.channel_id)
-    all_blocks = get_combined_blocks(data, channel_id_str)
-
+async def cmd_autocomplete(interaction: discord.Interaction, current: str):
+    cmd_name = interaction.command.name
+    data = load_data().get(cmd_name, {})
+    all_blocks = get_combined_blocks(data, str(interaction.channel_id))
     choices, seen = [], set()
-    search_current = current.lower()
-
     for block in all_blocks:
         allowed, _ = is_authorized(interaction.user, block.get("permissions", {}))
         if allowed:
-            cmds = block.get("commands", {})
-            for name in cmds.keys():
-                if search_current in name.lower() and name not in seen:
+            for name in block.get("commands", {}).keys():
+                if current.lower() in name.lower() and name not in seen:
                     choices.append(app_commands.Choice(name=name, value=name))
                     seen.add(name)
-
     return choices[:25]
+
+# 4. BACKGROUND TASK: MONITOR JSON
+@tasks.loop(minutes=1)
+async def check_for_new_commands():
+    if not bot.is_ready(): return
+
+    data = load_data()
+    existing_cmds = [cmd.name for cmd in bot.tree.get_commands()]
+    new_found = False
+
+    for cmd_name in data.keys():
+        if cmd_name not in existing_cmds:
+            # Register new top-level command
+            new_cmd = app_commands.Command(
+                name=cmd_name,
+                description=f"Dynamic command: {cmd_name}",
+                callback=cmd_callback
+            )
+            new_cmd.autocomplete('about')(cmd_autocomplete)
+            bot.tree.add_command(new_cmd)
+            print(f"Detected and registered new command: /{cmd_name}", flush=True)
+            new_found = True
+
+    if new_found:
+        await bot.tree.sync()
+        print("Slash commands re-synced with Discord.", flush=True)
+
+# 5. BOT EVENTS
+@bot.event
+async def on_ready():
+    # Initial registration
+    data = load_data()
+    for cmd_name in data.keys():
+        if not bot.tree.get_command(cmd_name):
+            new_cmd = app_commands.Command(name=cmd_name, description=f"Group: {cmd_name}", callback=cmd_callback)
+            new_cmd.autocomplete('about')(cmd_autocomplete)
+            bot.tree.add_command(new_cmd)
+
+    await bot.tree.sync()
+    check_for_new_commands.start() # Start the background monitor
+    print(f'--- {bot.user} Online | Monitor Active ---', flush=True)
 
 if __name__ == "__main__":
     if TOKEN:
