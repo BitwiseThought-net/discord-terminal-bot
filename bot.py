@@ -298,4 +298,3 @@ if __name__ == "__main__":
         bot.run(TOKEN)
     else:
         print("CRITICAL: DISCORD_TOKEN missing in .env.")
-
