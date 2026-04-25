@@ -141,17 +141,26 @@ def create_callback(cmd_name, param_name):
         all_blocks = get_combined_blocks(cmd_group_config, str(interaction.channel_id))
 
         target_cmd, last_reason = None, "Not found"
+        prepend_str, append_str = "", ""
         search_val = param_value.lower()
 
         for block in all_blocks:
             cmds = block.get("commands", {})
             # Create a lowercase mapping for case-insensitive lookup
             norm_cmds = {k.lower(): (k, v) for k, v in cmds.items()}
+
             if search_val in norm_cmds:
-                actual_key, cmd_string = norm_cmds[search_val]
+                actual_key, cmd_data = norm_cmds[search_val]
                 allowed, reason = is_authorized(interaction.user, block.get("permissions", {}))
+
                 if allowed:
-                    target_cmd = cmd_string
+                    # Support both string format and object format for commands
+                    if isinstance(cmd_data, dict):
+                        target_cmd = cmd_data.get("command")
+                        prepend_str = cmd_data.get("prepend", "")
+                        append_str = cmd_data.get("append", "")
+                    else:
+                        target_cmd = cmd_data
                     break
                 else:
                     last_reason = reason
@@ -190,9 +199,14 @@ def create_callback(cmd_name, param_name):
 
             stdout, stderr = await process.communicate()
             log_action(interaction.user, interaction.channel_id, cmd_name, param_value, "SUCCESS")
-            result = (stdout.decode() or stderr.decode()).strip() or "Success (No output)."
 
-            output_content = f"`{cmd_name.capitalize()} {param_name}: {param_value}`\n```\n{result[:1900]}\n```"
+            # Decode and strip standard output. Fallback removed to allow empty returns.
+            cmd_output = (stdout.decode() or stderr.decode()).strip()
+
+            # Apply Prepend and Append logic
+            final_result = f"{prepend_str}{cmd_output}{append_str}"
+
+            output_content = f"`{cmd_name.capitalize()} {param_name}: {param_value}`\n```\n{final_result[:1900]}\n```"
 
             if loading_msg:
                 await loading_msg.edit(content=output_content)
@@ -260,7 +274,7 @@ async def sync_commands_from_json():
                 callback=described_callback
             )
 
-            # 4. Register autocomplete to the specific renamed parameter (using internal 'query' name)
+            # 4. Register autocomplete to the internal parameter name 'query'
             new_cmd.autocomplete('query')(create_autocomplete(cmd_name))
 
             bot.tree.add_command(new_cmd)

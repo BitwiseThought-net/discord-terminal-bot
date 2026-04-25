@@ -18,7 +18,7 @@ def main():
                         help="Scheme to use (http or https, default: http)")
 
     parser.add_argument("--host", default="ollama",
-                        help="Host to use (no restriction enforced)")
+                        help="Host to use (default: ollama)")
 
     parser.add_argument("--port", type=int, default=11434,
                         help="Port to use (default: 11434)")
@@ -41,13 +41,25 @@ def main():
                         default=False,
                         help="Enable/disable raw mode")
 
+    # -----------------------------
+    # Sampling controls (NEW)
+    # -----------------------------
+    parser.add_argument("--temperature", type=float, default=0.8,
+                        help="Sampling temperature (0.0-2.0, higher = more random)")
+
+    parser.add_argument("--top-p", type=float, default=0.9,
+                        help="Nucleus sampling (0.0-1.0)")
+
+    parser.add_argument("--top-k", type=int, default=40,
+                        help="Top-k sampling limit")
+
     parser.add_argument("--insecure", action="store_true",
                         help="Disable TLS verification (NOT recommended)")
 
     args = parser.parse_args()
 
     # -----------------------------
-    # Input validation
+    # Validation
     # -----------------------------
     if args.scheme not in ALLOWED_SCHEMES:
         print("Error: invalid scheme", file=sys.stderr)
@@ -71,7 +83,14 @@ def main():
         "model": args.payload_model,
         "prompt": args.payload_prompt,
         "stream": args.payload_stream,
-        "raw": args.payload_raw
+        "raw": args.payload_raw,
+
+        # -----------------------------
+        # Sampling controls (NEW)
+        # -----------------------------
+        "temperature": args.temperature,
+        "top_p": args.top_p,
+        "top_k": args.top_k
     }
 
     verify_tls = not args.insecure
@@ -99,7 +118,6 @@ def main():
                         if "response" in chunk:
                             print(chunk["response"], end="", flush=True)
 
-                        # safer termination condition
                         if chunk.get("done") is True:
                             break
 
@@ -120,7 +138,6 @@ def main():
                 data = json.loads(response.text)
 
                 if "response" in data:
-                    # ONLY stdout output
                     print(data["response"].strip("\n"))
                 else:
                     print("Error: invalid API response structure", file=sys.stderr)
@@ -137,4 +154,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
