@@ -1,6 +1,7 @@
 {
   "funfact": {
     "parameter_name": "fact",
+    "loading_message": "📜 *Fetching a wisdom nugget...*",
     "*": [
       {
         "comment": "Global commands available in every channel to everyone",

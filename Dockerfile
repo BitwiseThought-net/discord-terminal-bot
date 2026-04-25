@@ -13,6 +13,8 @@ RUN sed -i 's/Components: main/Components: main contrib non-free non-free-firmwa
 
 ENV PATH="/usr/games:${PATH}"
 
+RUN ln -s /usr/local/bin/python3 /usr/bin/python3
+
 WORKDIR /app
 
 COPY requirements.txt .

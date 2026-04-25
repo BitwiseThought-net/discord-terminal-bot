@@ -5,3 +5,4 @@ discord.py==2.4.0
 # Using python-dotenv to support local development outside of Docker
 # Required for .env file loading
 python-dotenv
+requests
