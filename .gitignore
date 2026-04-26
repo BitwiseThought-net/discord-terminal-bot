@@ -1,2 +1,5 @@
 .env
 commands/commands.json
+*.json
+__pycache__/
+*.pyc

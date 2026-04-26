@@ -56,5 +56,22 @@
         }
       }
     ]
+  },
+  "play": {
+    "parameter_name": "game",
+    "*": [
+      {
+        "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
+        "commands": {
+          "Roll a D4": { "command": "bash -c 'echo $(( (RANDOM % 4) + 1 ))'" },
+          "Roll a D6": { "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'" },
+          "Roll a D8": { "command": "bash -c 'echo $(( (RANDOM % 8) + 1 ))'" },
+          "Roll a D10": { "command": "bash -c 'echo $(( (RANDOM % 10) + 1 ))'" },
+          "Roll a D12": { "command": "bash -c 'echo $(( (RANDOM % 12) + 1 ))'" },
+          "Roll a D20": { "command": "bash -c 'echo $(( (RANDOM % 20) + 1 ))'" },
+          "Roll a D100": { "command": "bash -c 'echo $(( (RANDOM % 100) + 1 ))'" }
+        }
+      }
+    ]
   }
 }
