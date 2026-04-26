@@ -54,6 +54,7 @@ def create_callback(cmd_name, param_name):
         
         target_cmd, last_reason = None, "Not found"
         prepend_str, append_str, validation_rules, variable_key = "", "", None, None
+        custom_output_config = None
         search_val = param_value.lower()
         
         for block in all_blocks:
@@ -66,13 +67,13 @@ def create_callback(cmd_name, param_name):
                 allowed, reason = is_authorized(interaction.user, block.get("permissions", {}), OWNER_ID)
                 
                 if allowed:
-                    # Support both string format and object format for commands
                     if isinstance(cmd_data, dict):
                         target_cmd = cmd_data.get("command")
                         prepend_str = cmd_data.get("prepend", "")
                         append_str = cmd_data.get("append", "")
                         validation_rules = cmd_data.get("validation")
                         variable_key = cmd_data.get("key")
+                        custom_output_config = cmd_data.get("output")
                     else:
                         target_cmd = cmd_data
                     break
@@ -122,21 +123,37 @@ def create_callback(cmd_name, param_name):
             if variable_key:
                 context[variable_key] = cmd_output
 
-            # Run validation logic if rules are present (Awaited from lib/validation.py)
+            # Run validation logic (context will be updated by lib/validation.py if nested keys exist)
+            validation_passed = True
             if validation_rules:
-                if not await validate_output(cmd_output, validation_rules, context):
-                    cmd_output = "Validation failed"
-                    if variable_key: 
-                        context[variable_key] = cmd_output
+                validation_passed = await validate_output(cmd_output, validation_rules, context)
+
+            # Determine Final Output
+            if custom_output_config and isinstance(custom_output_config, dict):
+                # Use custom pass/fail strings from JSON
+                template = custom_output_config.get("pass" if validation_passed else "fail", "")
+                try:
+                    # Apply interpolation from the accumulated context
+                    final_display = template.format(**context) if context else template
+                except KeyError:
+                    final_display = template
+            else:
+                # Use standard behavior (command output + prepend/append)
+                display_text = cmd_output if validation_passed else "Validation failed"
+                
+                # Update main key in context if validation failed to reflect the error string
+                if not validation_passed and variable_key:
+                    context[variable_key] = display_text
+                
+                try:
+                    final_prepend = prepend_str.format(**context) if context else prepend_str
+                    final_append = append_str.format(**context) if context else append_str
+                except KeyError:
+                    final_prepend, final_append = prepend_str, append_str
+                
+                final_display = f"{final_prepend}{display_text}{final_append}"
             
-            # Apply Prepend/Append with {key} interpolation
-            try:
-                final_prepend = prepend_str.format(**context) if context else prepend_str
-                final_append = append_str.format(**context) if context else append_str
-            except KeyError:
-                final_prepend, final_append = prepend_str, append_str
-            
-            output_content = f"`{cmd_name.capitalize()} {param_name}: {param_value}`\n```\n{final_prepend}{cmd_output}{final_append}\n```"
+            output_content = f"`{cmd_name.capitalize()} {param_name}: {param_value}`\n```\n{final_display[:1900]}\n```"
             
             if loading_msg:
                 await loading_msg.edit(content=output_content)
@@ -187,14 +204,14 @@ async def sync_commands_from_json():
     
     for cmd_name, config in data.items():
         if cmd_name not in existing_cmds:
-            # Extract specific parameter name from JSON
+            # Extract specific parameter name from JSON (defaults to 'about')
             param_name = config.get("parameter_name", "about")
             
             # 1. Generate the callback function
             callback = create_callback(cmd_name, param_name)
             
             # 2. Rename the internal 'query' arg to the JSON's 'param_name'
-            # Note: We must register autocomplete to the INTERNAL name 'query'
+            # and add a description for the Discord UI.
             renamed_callback = app_commands.rename(query=param_name)(callback)
             described_callback = app_commands.describe(query=f"Select {param_name}")(renamed_callback)
             

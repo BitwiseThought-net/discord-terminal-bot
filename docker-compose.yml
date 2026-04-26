@@ -17,6 +17,7 @@ services:
       - ./commands:/app/commands    # Mount the config/scripts folder
       - /var/run/docker.sock:/var/run/docker.sock # The "Magic" Bridge
       - /var/lib/docker/containers:/app/dcon:ro
+      - ./data/config.txt:/app/data/config.txt:ro
     user: root  # Required to have permission to use the socket
 
 

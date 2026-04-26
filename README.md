@@ -28,9 +28,9 @@ The bot is configured via Environment Variables in your `docker-compose.yml` and
 
 ### Environment Variables (.env)
 *   `DISCORD_TOKEN`: Your unique bot token.
-*   `OWNER_ID`: Your Discord User ID (Bypasses all blacklist/whitelist checks).
+*   `OWNER_ID`: Your Discord User ID (Bypasses all security checks).
 *   `COMMANDS_FILE`: Path to your JSON config (e.g., `commands/commands.json`).
-*   `LOG_FILE`: (Optional) Path to a persistent log file.
+*   `LOG_FILE`: (Optional) Path to a persistent log file (e.g., `commands/bot_log.txt`).
 *   `LOADING_TIMEOUT`: Seconds to wait (default `1.5`) before showing the loading message.
 *   `DETECT_DUPLICATES`: (Boolean) If `True`, the bot warns you in the console if duplicate keys are found in your JSON.
 
@@ -81,11 +81,21 @@ The bot monitors this file in the background. Adding a new top-level key registe
     "1234567890": [
       {
         "commands": {
-          "check_root": {
+          "check_access": {
             "command": "whoami",
             "key": "user",
-            "prepend": "Current executor: {user}\n",
-            "validation": { "==": "root" }
+            "validation": {
+              "==": {
+                "result": {
+                  "command": "grep 'admin' /app/data/config.txt 2>/dev/null | cut -d: -f2 | grep . || echo 'NONE'",
+                  "key": "required_admin"
+                }
+              }
+            },
+            "output": {
+              "pass": "PASSED: {user} is the authorized admin ({required_admin}).",
+              "fail": "DENIED: User {user} does not match required admin {required_admin}."
+            }
           }
         }
       }
@@ -113,8 +123,9 @@ The bot monitors this file in the background. Adding a new top-level key registe
 
 1.  **Project Structure**:
     *   `bot.py`: Main entry point.
-    *   `lib/`: Contains `auth.py`, `data_manager.py`, `logger.py`, and `validation.py`.
-    *   `commands/`: Contains `commands.json` and any local scripts (e.g., `.sh`, `.py`).
+    *   `lib/`: Logic library (`auth.py`, `data_manager.py`, `logger.py`, `validation.py`).
+    *   `commands/`: Configuration (`commands.json`) and scripts.
+    *   `data/`: Local data files (e.g., `config.txt`) used for validation.
 2.  **Launch**: Execute the following command from the root directory:
     ```bash
     docker compose up --build -d
@@ -135,7 +146,7 @@ The bot monitors this file in the background. Adding a new top-level key registe
 *   **Autocomplete**: Dynamically filtered by channel and permissions; matches are case-insensitive.
 
 ### **Advanced Validation Engine**
-Commands can include a `validation` block to check output. Logic can be nested with `and`, `or`, and `not`.
+Commands can include a `validation` block with nested logic (`and`, `or`, `not`).
 *   `==`: Direct string equality.
 *   `~=`: Approximate comparison (Fuzzy matching via Damerau-Levenshtein Distance).
 *   `contains`: Checks if output contains a string or list of strings.
