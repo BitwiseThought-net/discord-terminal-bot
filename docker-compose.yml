@@ -10,6 +10,7 @@ services:
       - COMMANDS_FILE=commands/commands.json
       - LOADING_TIMEOUT=1.5  # Time in seconds before showing the loading message
 #      - LOG_FILE=/app/commands/bot_log.txt  # Leave blank or remove to disable file logging
+      - DETECT_DUPLICATES=True  # Set to False to disable console warnings
     volumes:
       - ./bot.py:/app/bot.py        # Mount just the script
       - ./lib:/app/lib              # Mount the lib folder

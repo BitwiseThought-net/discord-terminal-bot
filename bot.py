@@ -53,7 +53,7 @@ def create_callback(cmd_name, param_name):
         all_blocks = get_combined_blocks(cmd_group_config, str(interaction.channel_id))
         
         target_cmd, last_reason = None, "Not found"
-        prepend_str, append_str, validation_rules = "", "", None
+        prepend_str, append_str, validation_rules, variable_key = "", "", None, None
         search_val = param_value.lower()
         
         for block in all_blocks:
@@ -72,6 +72,7 @@ def create_callback(cmd_name, param_name):
                         prepend_str = cmd_data.get("prepend", "")
                         append_str = cmd_data.get("append", "")
                         validation_rules = cmd_data.get("validation")
+                        variable_key = cmd_data.get("key")
                     else:
                         target_cmd = cmd_data
                     break
@@ -116,15 +117,26 @@ def create_callback(cmd_name, param_name):
             # Decode and strip standard output
             cmd_output = (stdout.decode() or stderr.decode()).strip()
             
-            # Run validation logic if rules are present (Awaited from the imported lib function)
+            # Build context for string interpolation
+            context = {}
+            if variable_key:
+                context[variable_key] = cmd_output
+
+            # Run validation logic if rules are present (Awaited from lib/validation.py)
             if validation_rules:
-                if not await validate_output(cmd_output, validation_rules):
+                if not await validate_output(cmd_output, validation_rules, context):
                     cmd_output = "Validation failed"
+                    if variable_key: 
+                        context[variable_key] = cmd_output
             
-            # Apply Prepend and Append logic
-            final_result = f"{prepend_str}{cmd_output}{append_str}"
+            # Apply Prepend/Append with {key} interpolation
+            try:
+                final_prepend = prepend_str.format(**context) if context else prepend_str
+                final_append = append_str.format(**context) if context else append_str
+            except KeyError:
+                final_prepend, final_append = prepend_str, append_str
             
-            output_content = f"`{cmd_name.capitalize()} {param_name}: {param_value}`\n```\n{final_result[:1900]}\n```"
+            output_content = f"`{cmd_name.capitalize()} {param_name}: {param_value}`\n```\n{final_prepend}{cmd_output}{final_append}\n```"
             
             if loading_msg:
                 await loading_msg.edit(content=output_content)
@@ -175,14 +187,14 @@ async def sync_commands_from_json():
     
     for cmd_name, config in data.items():
         if cmd_name not in existing_cmds:
-            # Extract specific parameter name from JSON (defaults to 'about')
+            # Extract specific parameter name from JSON
             param_name = config.get("parameter_name", "about")
             
             # 1. Generate the callback function
             callback = create_callback(cmd_name, param_name)
             
             # 2. Rename the internal 'query' arg to the JSON's 'param_name'
-            # and add a description for the Discord UI.
+            # Note: We must register autocomplete to the INTERNAL name 'query'
             renamed_callback = app_commands.rename(query=param_name)(callback)
             described_callback = app_commands.describe(query=f"Select {param_name}")(renamed_callback)
             
@@ -231,4 +243,3 @@ if __name__ == "__main__":
         bot.run(TOKEN)
     else:
         print("CRITICAL: DISCORD_TOKEN missing in .env.")
-
