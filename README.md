@@ -11,7 +11,7 @@ Before deployment, you must register the bot and configure its permissions.
 1.  **Create Application**: Go to the [Discord Developer Portal](https://discord.com) and click **New Application**.
 2.  **Create Bot User**: Navigate to the **Bot** tab and click **Add Bot**.
 3.  **Enable Privileged Intents**: Under the **Bot** tab, toggle **ON**:
-    *   **SERVER MEMBERS INTENT**: **Critical.** Required for the bot to check user roles for permission logic.
+    *   **SERVER MEMBERS INTENT**: **Critical.** Required for checking user roles for permission logic.
     *   **MESSAGE CONTENT INTENT**: Required for command processing.
 4.  **Token**: Click **Reset Token** to get your bot's unique token. Save this for your `.env` file.
 5.  **Invite Bot**: 
@@ -28,7 +28,7 @@ The bot is configured via Environment Variables in your `docker-compose.yml` and
 
 ### Environment Variables (.env)
 *   `DISCORD_TOKEN`: Your unique bot token.
-*   `OWNER_ID`: Your Discord User ID (Bypasses all security checks).
+*   `OWNER_ID`: Your Discord User ID (Bypasses all blacklist/whitelist checks).
 *   `COMMANDS_FILE`: Path to your JSON config (e.g., `commands/commands.json`).
 *   `LOG_FILE`: (Optional) Path to a persistent log file (e.g., `commands/bot_log.txt`).
 *   `LOADING_TIMEOUT`: Seconds to wait (default `1.5`) before showing the loading message.
@@ -56,7 +56,23 @@ The bot monitors this file in the background. Adding a new top-level key registe
             "prepend": "🎲 **Result:** "
           },
           "GuessWhat": "echo 'Chicken butt!!'",
-          "moo": "fortune -a | cowsay"
+          "moo": "fortune -a | cowsay",
+          "Oink": {
+            "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'",
+            "key": "die1",
+            "validation": {
+              "!=": {
+                "result": {
+                  "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'",
+                  "key": "die2"
+                }
+              }
+            },
+            "output": {
+              "pass": "✅ You win! 🎲{die1} & 🎲{die2} (No doubles)",
+              "fail": "🐷 OINK! 🎲{die1} & 🎲{die2} (Doubles! You lose)"
+            }
+          }
         }
       }
     ]
@@ -125,7 +141,7 @@ The bot monitors this file in the background. Adding a new top-level key registe
     *   `bot.py`: Main entry point.
     *   `lib/`: Logic library (`auth.py`, `data_manager.py`, `logger.py`, `validation.py`).
     *   `commands/`: Configuration (`commands.json`) and scripts.
-    *   `data/`: Local data files (e.g., `config.txt`) used for validation.
+    *   `data/`: Persistent data files used by commands (e.g., `config.txt`).
 2.  **Launch**: Execute the following command from the root directory:
     ```bash
     docker compose up --build -d
@@ -146,8 +162,8 @@ The bot monitors this file in the background. Adding a new top-level key registe
 *   **Autocomplete**: Dynamically filtered by channel and permissions; matches are case-insensitive.
 
 ### **Advanced Validation Engine**
-Commands can include a `validation` block with nested logic (`and`, `or`, `not`).
-*   `==`: Direct string equality.
+Commands can include a `validation` block to check output. Logic can be nested with `and`, `or`, and `not`.
+*   `==` / `!=`: Direct string equality or inequality.
 *   `~=`: Approximate comparison (Fuzzy matching via Damerau-Levenshtein Distance).
 *   `contains`: Checks if output contains a string or list of strings.
 *   `within`: Checks if output exists inside a target string.
@@ -155,14 +171,14 @@ Commands can include a `validation` block with nested logic (`and`, `or`, `not`)
 *   `result`: Compares command output against the result of a *second* shell command.
 
 ### **Dynamic Keys & Formatting**
-*   **`key`**: Assign a key to a command to hold its output value.
-*   **Interpolation**: Use `{key_name}` inside `prepend`, `append`, or `validation` strings to inject the command result dynamically.
+*   **`key`**: Assign a key to a command or nested `result` to hold its output value.
+*   **Interpolation**: Use `{key_name}` inside `prepend`, `append`, `validation`, or `output` strings to inject results dynamically from the execution context.
 
 ### **Permission Hierarchy**
-1.  **Owner Bypass**: The `OWNER_ID` is never restricted.
+1.  **Owner Bypass**: The `OWNER_ID` from `.env` is never restricted.
 2.  **Blacklist (Priority)**: Immediate denial if a user/role is blacklisted.
-3.  **Whitelist**: If present, only listed users/roles can see or use the command.
-4.  **Wildcards**: Support for `"*"` or `"all"` to lock down or open up blocks.
+3.  **Whitelist**: If defined, only listed users/roles can see or use the command.
+4.  **Wildcards**: Support for `"*"` or `"all"` in blacklists to lock down blocks.
 
 ---
 

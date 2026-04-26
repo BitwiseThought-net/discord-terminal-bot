@@ -21,7 +21,23 @@
           "date": "date",
           "moo": "fortune -a | cowsay",
           "mooooooooooooooo": "fortune -l | cowsay",
-          "no": "/app/commands/no-as-a-service.sh"
+          "no": "/app/commands/no-as-a-service.sh",
+          "Pig": {
+            "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'",
+            "key": "die1",
+            "validation": {
+              "!=": {
+                "result": {
+                  "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'",
+                  "key": "die2"
+                }
+              }
+            },
+            "output": {
+              "pass": "✅ You win! 🎲{die1} & 🎲{die2} (No doubles)",
+              "fail": "🐷 OINK! 🎲{die1} & 🎲{die2} (Doubles! You lose)"
+            }
+          }
         }
       }
     ]
