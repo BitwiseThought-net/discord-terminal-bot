@@ -1,0 +1,77 @@
+{
+  "funfact": {
+    "parameter_name": "fact",
+    "loading_message": "📜 *Fetching a wisdom nugget...*",
+    "*": [
+      {
+        "comment": "Global commands available in every channel to everyone",
+        "commands": {
+          "GuessWhat": "echo 'Chicken butt!!'",
+          "me": "echo 'You lost THE GAME'",
+          "date": "date",
+          "fortunes": "fortune -a",
+          "moo": "fortune -a | cowsay",
+          "mooooooooooooooo": "fortune -l | cowsay",
+          "no": "/app/commands/no-as-a-service.sh",
+          "nooooooooooooooo": "/app/commands/no-as-a-service.sh | cowsay"
+        }
+      }
+    ]
+  },
+  "bot": {
+    "parameter_name": "command",
+    "123456789123456789": [
+      {
+        "comment": "Channel Commands! ...for role (111111111) and that special user who isn't in the role (123456789), but not those two untrusted neer-do-wells (222222222, & 333333333) nor that treacherous group (987654321).",
+        "permissions": {
+          "whitelist_roles": [111111111],
+          "blacklist_users": [222222222,333333333],
+          "whitelist_users": [123456789],
+          "blacklist_roles": [987654321]
+        },
+        "commands": {
+          "uptime": "uptime -p",
+          "disk": "df -h",
+          "status": "uptime",
+          "memory": "free -h",
+          "ping_google": "ping -c 4 google.com",
+          "disk_usage": "df -h",
+          "logs": "tail -n 20 commands/bot_log.txt"
+        }
+      }
+    ]
+  },
+  "server": {
+    "parameter_name": "info",
+    "987654321987654321": [
+      {
+        "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
+        "permissions": {
+          "blacklist_users": [333333333]
+        },
+        "commands": {
+          "uptime": "uptime -p",
+          "date": "date",
+          "status": "uptime"
+        }
+      }
+    ]
+  },
+  "play": {
+    "parameter_name": "game",
+    "*": [
+      {
+        "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
+        "commands": {
+          "Roll a D4": { "command": "bash -c 'echo $(( (RANDOM % 4) + 1 ))'" },
+          "Roll a D6": { "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'" },
+          "Roll a D8": { "command": "bash -c 'echo $(( (RANDOM % 8) + 1 ))'" },
+          "Roll a D10": { "command": "bash -c 'echo $(( (RANDOM % 10) + 1 ))'" },
+          "Roll a D12": { "command": "bash -c 'echo $(( (RANDOM % 12) + 1 ))'" },
+          "Roll a D20": { "command": "bash -c 'echo $(( (RANDOM % 20) + 1 ))'" },
+          "Roll a D100": { "command": "bash -c 'echo $(( (RANDOM % 100) + 1 ))'" }
+        }
+      }
+    ]
+  }
+}
