@@ -1,7 +1,7 @@
 services:
-  discord-funfacts-bot:
+  discord-terminal-bot:
     build: .
-    container_name: discord-funfacts-bot
+    container_name: discord-terminal-bot
     restart: unless-stopped
     env_file:
       - .env
