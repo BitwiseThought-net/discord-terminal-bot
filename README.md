@@ -57,7 +57,7 @@ The bot monitors this file in the background. Adding a new top-level key registe
           },
           "GuessWhat": "echo 'Chicken butt!!'",
           "moo": "fortune -a | cowsay",
-          "Oink": {
+          "Pig": {
             "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'",
             "key": "die1",
             "validation": {
