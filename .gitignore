@@ -1,5 +1,29 @@
-.env
-commands/commands.json
-*.json
+# --- Python Specific ---
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+
+# --- Configuration (CRITICAL) ---
+.env
+# Ignore the live commands file to prevent checking in server-specific configs
+commands/commands.json
+
+# --- Docker Specific ---
+.dockerignore
+docker-compose.override.yml
+
+# --- Logs & Databases ---
+*.log
+commands/bot_log.txt
+*.db
+*.sqlite3
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
