@@ -1,75 +1,106 @@
 {
-  "funfact": {
-    "parameter_name": "fact",
-    "loading_message": "📜 *Fetching a wisdom nugget...*",
+  "play": {
+    "parameter_name": "game",
+    "loading_message": "🎲 *Rolling the dice...*",
     "*": [
-      {
-        "comment": "Global commands available in every channel to everyone",
-        "commands": {
-          "GuessWhat": "echo 'Chicken butt!!'",
-          "me": "echo 'You lost THE GAME'",
-          "date": "date",
-          "fortunes": "fortune -a",
-          "moo": "fortune -a | cowsay",
-          "mooooooooooooooo": "fortune -l | cowsay",
-          "no": "/app/commands/no-as-a-service.sh",
-          "nooooooooooooooo": "/app/commands/no-as-a-service.sh | cowsay"
-        }
-      }
-    ]
-  },
-  "bot": {
-    "parameter_name": "command",
-    "123456789123456789": [
-      {
-        "comment": "Channel Commands! ...for role (111111111) and that special user who isn't in the role (123456789), but not those two untrusted neer-do-wells (222222222, & 333333333) nor that treacherous group (987654321).",
-        "permissions": {
-          "whitelist_roles": [111111111],
-          "blacklist_users": [222222222,333333333],
-          "whitelist_users": [123456789],
-          "blacklist_roles": [987654321]
-        },
-        "commands": {
-          "uptime": "uptime -p",
-          "disk": "df -h",
-          "status": "uptime",
-          "memory": "free -h",
-          "ping_google": "ping -c 4 google.com",
-          "disk_usage": "df -h",
-          "logs": "tail -n 20 commands/bot_log.txt"
-        }
-      }
-    ]
-  },
-  "server": {
-    "parameter_name": "info",
-    "987654321987654321": [
       {
         "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
         "permissions": {
           "blacklist_users": [333333333]
         },
         "commands": {
-          "uptime": "uptime -p",
+          "Roll a D4": { "command": "bash -c 'echo $(( (RANDOM % 4) + 1 ))'", "prepend": "🎲 **D4 Roll:** " },
+          "Roll a D6": { "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'", "prepend": "🎲 **D6 Roll:** " },
+          "Roll a D8": { "command": "bash -c 'echo $(( (RANDOM % 8) + 1 ))'", "prepend": "🎲 **D8 Roll:** " },
+          "Roll a D10": { "command": "bash -c 'echo $(( (RANDOM % 10) + 1 ))'", "prepend": "🎲 **D10 Roll:** " },
+          "Roll a D12": { "command": "bash -c 'echo $(( (RANDOM % 12) + 1 ))'", "prepend": "🎲 **D12 Roll:** " },
+          "Roll a D20": { "command": "bash -c 'echo $(( (RANDOM % 20) + 1 ))'", "prepend": "🎲 **D20 Roll:** " },
+          "Roll a D100": { "command": "bash -c 'echo $(( (RANDOM % 100) + 1 ))'", "prepend": "🎲 **D100 Roll:** " },
+          "GuessWhat": "echo 'Chicken butt!!'",
+          "regret": "echo 'You lost THE GAME'",
           "date": "date",
-          "status": "uptime"
+          "moo": "fortune -a | cowsay",
+          "mooooooooooooooo": "fortune -l | cowsay",
+          "no": "/app/commands/no-as-a-service.sh"
         }
       }
     ]
   },
-  "play": {
-    "parameter_name": "game",
+  "funfact": {
+    "parameter_name": "about",
+    "loading_message": "🕒 *Consulting the ancient scrolls...*",
     "*": [
       {
-        "comment": "Channel Commands, everyone in the channel can use ... except 333333333, they're in time out.",
+        "comment": "Standard fortune commands available globally",
         "commands": {
-          "Roll a D4": { "command": "bash -c 'echo $(( (RANDOM % 4) + 1 ))'" },
-          "Roll a D6": { "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'" },
-          "Roll a D8": { "command": "bash -c 'echo $(( (RANDOM % 8) + 1 ))'" },
-          "Roll a D10": { "command": "bash -c 'echo $(( (RANDOM % 10) + 1 ))'" },
-          "Roll a D12": { "command": "bash -c 'echo $(( (RANDOM % 12) + 1 ))'" },
-          "Roll a D20": { "command": "bash -c 'echo $(( (RANDOM % 20) + 1 ))'" },
-          "Roll a D100": { "command": "bash -c 'echo $(( (RANDOM % 100) + 1 ))'" }
+          "linux": {
+            "command": "fortune linux",
+            "prepend": "🐧 **Linux Wisdom:**\n",
+            "append": "\n*-- Source: fortune-mod*"
+          },
+          "wisdom": "fortune wisdom"
+        }
+      }
+    ]
+  },
+  "ai": {
+    "parameter_name": "prompt",
+    "loading_message": "🤖 *Querying Ollama AI, please wait...*",
+    "all": [
+      {
+        "comment": "Ollama script integration",
+        "commands": {
+          "ask": "python3 /app/commands/query_ollama.py --prompt"
+        }
+      }
+    ]
+  },
+  "runtest": {
+    "parameter_name": "query",
+    "123456789012345678": [
+      {
+        "comment": "Numerical and Logic Validation Examples",
+        "commands": {
+          "check_random": {
+            "command": "echo $(( ( RANDOM % 10 ) + 1 ))",
+            "validation": {
+              ">": "5"
+            }
+          },
+          "double_roll_match": {
+            "command": "echo $(( ( RANDOM % 10 ) + 1 ))",
+            "validation": {
+              "==": {
+                "result": {
+                  "command": "echo $(( ( RANDOM % 10 ) + 1 ))"
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "admin": {
+    "parameter_name": "task",
+    "123456789012345678": [
+      {
+        "comment": "Whitelist and Blacklist examples",
+        "permissions": {
+          "whitelist_roles": [111111111, 222222222],
+          "blacklist_users": [444444444]
+        },
+        "commands": {
+          "container_status": "docker ps --format 'table {{.Names}}\t{{.Status}}'"
+        }
+      },
+      {
+        "comment": "Global Blacklist - Only the OWNER_ID from .env can run this",
+        "permissions": {
+          "blacklist_users": ["*"]
+        },
+        "commands": {
+          "reboot_server": "reboot"
         }
       }
     ]

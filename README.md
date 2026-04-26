@@ -1,87 +1,74 @@
-# 🤖 Discord Terminal Bot (Docker Edition)
+# 🤖 Discord Terminal Bot
 
-A secure, Docker-integrated Discord bot that allows authorized users to execute server-side commands via Discord Slash Commands (`/funfact`). This bot is designed to run within an isolated container while maintaining the ability to manage the host's Docker engine and execute local scripts.
+A highly flexible, Docker-integrated Discord bot that allows authorized users to execute server-side commands and scripts via dynamic Slash Commands. This bot features an advanced validation engine, real-time configuration monitoring, and granular permission controls.
 
 ---
 
 ## 🛠 1. Discord Developer Portal Setup
 
-Before the bot can function, you must register the application and configure the necessary privileged intents.
+Before deployment, you must register the bot and configure its permissions.
 
-1.  **Create Application:** Go to the [Discord Developer Portal](https://discord.com) and click **New Application**.
-2.  **Create Bot User:** Navigate to the **Bot** tab and click **Add Bot**.
-3.  **Enable Privileged Intents:** Under the **Bot** tab, scroll down to the **Privileged Gateway Intents** section and toggle **ON**:
-    *   **SERVER MEMBERS INTENT**: **Critical.** Required for the bot to check user roles for blacklist/whitelist logic.
-    *   **MESSAGE CONTENT INTENT**: Required for the bot to sync and process slash command inputs.
-4.  **Reset/Copy Token:** Click **Reset Token** to generate your bot's unique token. Save this for your configuration.
-5.  **OAuth2 URL Generator (Invite Bot):**
+1.  **Create Application**: Go to the [Discord Developer Portal](https://discord.com) and click **New Application**.
+2.  **Create Bot User**: Navigate to the **Bot** tab and click **Add Bot**.
+3.  **Enable Privileged Intents**: Under the **Bot** tab, toggle **ON**:
+    *   **SERVER MEMBERS INTENT**: **Critical.** Required for the bot to check user roles for permission logic.
+    *   **MESSAGE CONTENT INTENT**: Required for command processing.
+4.  **Token**: Click **Reset Token** to get your bot's unique token. Save this for your `.env` file.
+5.  **Invite Bot**: 
     *   Go to **OAuth2** -> **URL Generator**.
     *   Check `bot` and `applications.commands`.
     *   Under **Bot Permissions**, check: `Send Messages`, `Use Slash Commands`, `Read Message History`.
-    *   Copy the generated URL into your browser to invite the bot to your server.
+    *   Copy the URL into your browser to add the bot to your server.
 
 ---
 
 ## ⚙️ 2. Configuration & Environment
 
-### Environment Variables (.env)
-The bot requires a `.env` file in the root directory to store sensitive credentials:
-*   `DISCORD_TOKEN`: Your unique bot token from the Developer Portal.
-*   `OWNER_ID`: Your numerical Discord User ID (Bypasses all permission checks).
+The bot is configured entirely through Environment Variables and a JSON command dictionary.
 
-### Docker Compose Parameters
-*   **`PYTHONUNBUFFERED=1`**: Forces Python to flush logs immediately to the Docker console for real-time monitoring.
-*   **`LOG_FILE`**: (Optional) Path to a log file (e.g., `commands/bot_log.txt`). If left blank, whitespace, or removed, the bot will log **only** to the Docker console.
-*   **User**: `user: root` is required in the compose file to allow the bot to interact with the Docker socket.
-*   **Volumes**: 
-    *   `./commands:/app/commands`: Maps your local configuration, scripts, and logs.
-    *   `/var/run/docker.sock:/var/run/docker.sock`: Provides the bot permission to control other containers on the host.
+### Environment Variables (.env)
+*   `DISCORD_TOKEN`: Your unique bot token.
+*   `OWNER_ID`: Your Discord User ID (Bypasses all blacklist/whitelist checks).
+*   `COMMANDS_FILE`: Path to your JSON config (e.g., `commands/commands.json`).
+*   `LOG_FILE`: (Optional) Path to a persistent log file.
+*   `LOADING_TIMEOUT`: Time in seconds (default `1.5`) before the "Loading" message appears for long-running commands.
 
 ---
 
-## 📄 3. Command Dictionary (commands.json)
+## 📄 3. Command Configuration (commands.json)
 
-The bot reads `commands/commands.json` in real-time for every command. You can update this file without restarting the container.
+The bot monitors this file in the background. Adding a new top-level key registers a new Slash Command with Discord automatically within 60 seconds.
 
-### Structure
-Each **Channel ID** (or the wildcards `"*"` or `"all"`) maps to an **Array (List)** of command blocks. This allows you to stack different sets of commands with varying permissions in the same channel.
-
-Example (also see [commands/commands.json](https://github.com/BitwiseThought-net/discord-funfacts-bot/blob/main/commands/commands.json)) :
+### **Configuration Structure Example**
 ```json
 {
-  "funfacts": {
-    "parameter_name": "about",
+  "play": {
+    "parameter_name": "game",
+    "loading_message": "🎲 *Rolling the dice...*",
     "*": [
       {
-        "comment": "Global commands available in every channel to everyone",
+        "comment": "Public games with a specific user blacklist",
+        "permissions": { "blacklist_users": [333333333] },
         "commands": {
-          "life": "fortune",
-          "mooooooooooooooo": "fortune | cowsay",
-          "MOOOOOO!!": "/app/commands/no-as-a-service.sh | cowsay"
+          "Roll a D20": { 
+            "command": "bash -c 'echo $(( (RANDOM % 20) + 1 ))'",
+            "prepend": "🎲 **Result:** "
+          },
+          "GuessWhat": "echo 'Chicken butt!!'",
+          "moo": "fortune -a | cowsay"
         }
       }
-    ],
-  }
-  "server": {
-    "parameter_name": "info",
-    "YOUR_CHANNEL_ID_HERE": [
+    ]
+  },
+  "ai": {
+    "parameter_name": "prompt",
+    "loading_message": "🤖 *Querying Ollama AI...*",
+    "1234567890": [
       {
-        "comment": "Restricted Admin Commands",
-        "permissions": {
-          "whitelist_roles": [987654321],
-          "blacklist_users": [123456789],
-          "whitelist_users": [],
-          "blacklist_roles": []
-        },
+        "comment": "Admin-only AI access in a specific channel",
+        "permissions": { "whitelist_roles": [999999999] },
         "commands": {
-          "restart_web": "docker restart website_container",
-          "update_scripts": "sh /app/commands/update.sh"
-        }
-      },
-      {
-        "comment": "Public commands allowed in this specific channel",
-        "commands": {
-          "list_backups": "ls /app/commands/backups"
+          "ask": "python3 /app/commands/query_ollama.py --prompt"
         }
       }
     ]
@@ -89,40 +76,52 @@ Example (also see [commands/commands.json](https://github.com/BitwiseThought-net
 }
 ```
 
-Examples:
-
-<img width="427" height="283" alt="image" src="https://github.com/user-attachments/assets/b2237735-db16-443d-867e-b0c5fac04236" />
-
-<img width="514" height="563" alt="image" src="https://github.com/user-attachments/assets/a8e19f35-7084-4b18-a2af-dda013da4663" />
-
+---
 
 ## 🚀 4. Installation & Deployment
-Follow these steps to deploy the bot on your server:
-- Check out this repository.
-- Execute docker compose up --build -d. This command builds the image with the Docker CLI and launches the bot as a background service.
 
-## 🔍 5. Usage & Logic
-Once deployed, the bot integrates into your server via Slash Commands:
-- Interacting: Simply type /funfact in a configured channel.
-- Context-Aware Autocomplete: The command dropdown list dynamically filters aliases based on your specific User ID, Roles, and the Current Channel. Commands you are not authorized to run will be hidden.
-- Real-time Config: You can edit commands.json on your server at any time. Changes take effect instantly without needing to restart the container.
-- Any changes to the bot.py may require a refresh of the Discord client. (In-client: Ctrl + R)
-- Permission Hierarchy:
-  1. Owner Bypass: The OWNER_ID defined in your .env file is exempt from all restrictions and can run any command.
-  2. Blacklist Priority: If a user or their role is blacklisted in a specific command block, they are denied immediately, even if they are whitelisted elsewhere.
-  3. Optional Permissions: If the permissions section or a specific whitelist is missing, the command set is public. If a whitelist is present, only those listed IDs/Roles can use the commands.
-  4. Wildcards: Command blocks assigned to "*" or "all" are automatically combined with channel-specific commands and available globally.
+1.  **Project Structure**: Ensure your project is organized as follows:
+    *   `bot.py`: Main entry point.
+    *   `lib/`: Contains `auth.py`, `data_manager.py`, `logger.py`, and `validation.py`.
+    *   `commands/`: Contains `commands.json` and any local scripts (e.g., `.sh`, `.py`).
+2.  **Launch**: Execute the following command from the root directory:
+    ```bash
+    docker compose up --build -d
+    ```
+3.  **Monitor**: View real-time activity and startup logs:
+    ```bash
+    docker compose logs -f
+    ```
+
+---
+
+## 🔍 5. Functionality & Logic
+
+### **Dynamic Slash Commands**
+*   **Root Keys**: Every top-level key in your JSON becomes a unique `/command`.
+*   **Parameter Names**: Defined by `parameter_name` in JSON (e.g., `/play game:` vs `/ai prompt:`).
+*   **Live Updates**: Changes inside command blocks are **instant**. New root-level commands sync within **60 seconds**.
+
+### **Advanced Validation Engine**
+Commands can include a `validation` block to check output before displaying it:
+*   `==`: Direct string equality.
+*   `contains`: Checks if output contains a string (supports `and`/`or` lists).
+*   `within`: Checks if output exists inside a larger provided string.
+*   `>` / `<`: Numerical comparison (if output is an integer or decimal).
+*   `not`: Negates any validation rule.
+*   `result`: Compares the command output against the result of a *second* shell command.
+
+### **Permission Hierarchy**
+1.  **Owner Bypass**: The `OWNER_ID` is never restricted.
+2.  **Blacklist (Priority)**: Any user or role in a `blacklist_` is denied immediately.
+3.  **Whitelist**: If defined, only listed users/roles can see and use the command.
+4.  **Wildcards**: Support for `"*"` or `"all"` in blacklists to lock down commands to the Owner only.
+
+---
 
 ## 🛡 6. Security Information
-Security is critical when allowing terminal access via a chat interface:
-- **Docker Socket**:
-  Mounting /var/run/docker.sock provides the bot with root-level access to your Docker engine. This allows it to manage other containers. Only whitelist trusted users and roles.
-- **Isolation**:
-  The bot is restricted to its container environment. It cannot access host system files unless they are specifically mounted as volumes in docker-compose.yml.
-- **Script Safety**:
-  When running shell scripts (.sh), ensure they have execution permissions on the host (e.g., chmod +x script.sh). With great power comes great... something something.
-- **Audit Trail**:
-  Every command attempt (Authorized or Denied) is logged to the Docker console and the optional LOG_FILE defined in your environment, providing a full history of user activity.
-- **Fail-safe Defaults**:
-  If the commands.json file is malformed or a permission block is missing, the bot handles errors gracefully without crashing, defaulting to the safest restricted state.
 
+*   **Docker Isolation**: The bot runs in a container. It can only interact with the host or other containers via the mounted `/var/run/docker.sock`.
+*   **Read-Only Access**: For maximum security, mount sensitive volumes as `:ro` (read-only) in `docker-compose.yml`.
+*   **Script Safety**: Ensure all scripts in the `commands/` folder use **LF** line endings (not CRLF) and have execution permissions (`chmod +x`).
+*   **Audit Trail**: Every command attempt—including user IDs, channel IDs, and success/fail status—is logged to the console and the optional `LOG_FILE`.
