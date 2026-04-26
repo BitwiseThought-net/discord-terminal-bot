@@ -1,4 +1,4 @@
-# 🤖 Discord Terminal Bot (Professional Edition)
+# 🤖 Discord Terminal Bot
 
 A highly flexible, Docker-integrated Discord bot that allows authorized users to execute server-side commands and scripts via dynamic Slash Commands. This bot features an advanced validation engine, real-time configuration monitoring, and granular permission controls.
 
