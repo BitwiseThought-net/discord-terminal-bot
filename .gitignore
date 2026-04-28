@@ -27,3 +27,14 @@ commands/bot_log.txt
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
+
+
+# --- Editor & React Specific ---
+# Ignore all node_modules in any subfolder
+**/node_modules/
+# Ignore the production build output from React
+editor/dashboard/build/
+# Ignore npm debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
