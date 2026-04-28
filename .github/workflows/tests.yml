@@ -1,0 +1,43 @@
+name: CI Quality Gate
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏁 Checkout Repository
+        uses: actions/checkout@v4 #
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm' #
+          cache-dependency-path: |
+            package-lock.json
+            editor/package-lock.json
+            editor/dashboard/package-lock.json
+
+      - name: 📦 Install Root Dependencies
+        run: npm install
+
+      - name: 🏗️ Install Sub-project Dependencies
+        # This reaches into both folders to ensure test runners are ready
+        run: |
+          npm install --prefix editor
+          npm install --prefix editor/dashboard
+
+      - name: 🧪 Run All Unit Tests
+        # Leverages your Root Orchestrator script
+        run: npm run test:all
+
+      - name: 🧹 Docker Environment Check
+        # Optional: Verifies that the Dockerfiles can at least be parsed
+        run: |
+          docker build -t test-editor ./editor
+          docker build -t test-bot .

@@ -194,3 +194,6 @@ Commands can include a `validation` block to check output. Logic can be nested w
 
 ## 🛠️ Internal Systems
 For a detailed look at how data moves from the commands json, edited by the included dashboard editor, to be loaded by the Discord bot, see the [System Architecture Guide](./ARCHITECTURE.md).
+
+## 👩‍💻 For Developers
+Interested in contributing or modifying the bot? See our [Development Guide](./DEVELOPMENT.md).

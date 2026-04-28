@@ -2,7 +2,15 @@
   "name": "editor-backend",
   "version": "1.0.0",
   "main": "web-server.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node web-server.js"
+  },
   "dependencies": {
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "supertest": "^6.3.0"
   }
 }

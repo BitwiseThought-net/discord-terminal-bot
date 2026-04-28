@@ -1,0 +1,22 @@
+{
+  "name": "discord-terminal-bot-root",
+  "version": "1.0.0",
+  "description": "Root orchestrator for Discord Terminal Bot and Editor. Manages CI/CD, local testing, and Docker maintenance.",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install",
+    "install:all": "npm install --no-audit && npm install --prefix editor --no-audit && npm install --prefix editor/dashboard --no-audit",
+    "install:all:audit": "npm install && npm install --prefix editor && npm install --prefix editor/dashboard",
+    "test:editor": "npm test --prefix editor",
+    "test:dashboard": "npm test --prefix editor/dashboard -- --watchAll=false",
+    "test:all": "npm run install:all && npm run test:editor && npm run test:dashboard",
+    "docker:clean": "docker system prune -f",
+    "docker:purge": "docker system prune -af --volumes",
+    "docker:reset": "docker compose down -v && docker compose up --build -d",
+    "clean:local": "rm -rf node_modules editor/node_modules editor/dashboard/node_modules editor/dashboard/build && docker compose run --rm discord-terminal-bot find . -name '__pycache__' -type d -exec rm -rf {} +"
+
+  },
+  "devDependencies": {
+    "husky": "^8.0.3"
+  }
+}
