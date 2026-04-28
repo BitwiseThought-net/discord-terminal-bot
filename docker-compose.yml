@@ -1,13 +1,14 @@
 services:
   discord-terminal-bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
     container_name: discord-terminal-bot
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=1       # Ensures logs appear in 'docker logs' immediately
-      - COMMANDS_FILE=commands/commands.json
       - LOADING_TIMEOUT=5        # Time in seconds before showing the loading message
       - DETECT_DUPLICATES=True   # Set to False to disable console warnings
     volumes:
@@ -19,5 +20,15 @@ services:
       - ./data/config.txt:/app/data/config.txt:ro
     user: root                   # Required to have permission to use the socket
 
-
-
+  discord-terminal-bot-editor:
+    build:
+      context: ./editor
+      dockerfile: Dockerfile
+    container_name: discord-terminal-bot-editor
+    ports:
+      - "1701:80"
+    volumes:
+      - ./commands:/app/commands
+    restart: always
+    env_file:
+      - .env
