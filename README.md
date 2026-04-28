@@ -191,3 +191,6 @@ Commands can include a `validation` block to check output. Logic can be nested w
 *   **Read-Only Access**: For maximum security, mount sensitive volumes as `:ro` (read-only) in `docker-compose.yml`.
 *   **Script Safety**: Ensure all scripts in the `commands/` folder use **LF** line endings (not CRLF) and have execution permissions (`chmod +x`).
 *   **Audit Trail**: Every command attempt—including user IDs, channel IDs, and success/fail status—is logged to the console and the optional `LOG_FILE`.
+
+## 🛠️ Internal Systems
+For a detailed look at how data moves from the commands json, edited by the included dashboard editor, to be loaded by the Discord bot, see the [System Architecture Guide](./ARCHITECTURE.md).
