@@ -2,7 +2,7 @@ services:
   discord-terminal-bot:
     build:
       context: .
-      dockerfile: Dockerfile.bot
+      dockerfile: Dockerfile
     container_name: discord-terminal-bot
     restart: unless-stopped
     env_file:
