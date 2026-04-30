@@ -13,8 +13,8 @@ services:
       - DETECT_DUPLICATES=True   # Set to False to disable console warnings
     volumes:
 #      - ./bot.py:/app/bot.py     # Mount just the script
-      - ./lib:/app/lib           # Mount the lib folder
-      - ./commands:/app/commands # Mount the config/scripts folder
+#      - ./lib:/app/lib           # Mount the lib folder
+#      - ./commands:/app/commands # Mount the config/scripts folder
       - /var/run/docker.sock:/var/run/docker.sock # The "Magic" Bridge
       - /var/lib/docker/containers:/app/dcon:ro
 #      - ./data/config.txt:/app/data/config.txt:ro
