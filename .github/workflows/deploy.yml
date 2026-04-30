@@ -23,7 +23,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
-          port: 22
+          port: 10722
           # Update these commands based on how your bot is hosted (e.g., pm2, systemd, or docker)
           script: |
             cd /deploy/discord-terminal-bot
