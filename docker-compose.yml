@@ -12,6 +12,7 @@ services:
       - LOADING_TIMEOUT=5        # Time in seconds before showing the loading message
       - DETECT_DUPLICATES=True   # Set to False to disable console warnings
     volumes:
+      - shared-commands:/app/commands  # The bot reads from here
 #      - ./bot.py:/app/bot.py     # Mount just the script
 #      - ./lib:/app/lib           # Mount the lib folder
 #      - ./commands:/app/commands # Mount the config/scripts folder
@@ -28,7 +29,12 @@ services:
     ports:
       - "1701:80"
     volumes:
-      - ./commands:/app/commands
+      - shared-commands:/app/commands  # The editor writes to here
+#      - ./commands:/app/commands
     restart: always
     env_file:
       - .env
+
+
+volumes:
+  shared-commands:
