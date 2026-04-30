@@ -10,12 +10,17 @@ def damerau_levenshtein_distance(s1, s2):
     for i in range(lenstr1):
         for j in range(lenstr2):
             cost = 0 if s1[i] == s2[j] else 1
-            d[(i, j)] = min(d[(i - 1, j)] + 1, d[(i, j - 1)] + 1, d[(i - 1, j - 1)] + cost)
+            d[(i, j)] = min(
+                d[(i - 1, j)] + 1,       # deletion
+                d[(i, j - 1)] + 1,       # insertion
+                d[(i - 1, j - 1)] + cost # substitution
+            )
             if i > 0 and j > 0 and s1[i] == s2[j - 1] and s1[i - 1] == s2[j]:
-                d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)
+                d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost) # transposition
+
     return d[lenstr1 - 1, lenstr2 - 1]
 
-async def run_comparison_command(cmd):
+async def run_command(cmd):
     """Executes a sub-command to get a string for validation comparison with error logging."""
     try:
         process = await asyncio.create_subprocess_shell(
@@ -38,11 +43,11 @@ async def validate_output(output, rules, context):
         if isinstance(v, dict) and "result" in v:
             res_config = v["result"]
             cmd = res_config.get("command", "").format(**context)
-            res_output = await run_comparison_command(cmd)
-
+            res_output = await run_command(cmd)
+            
             if "key" in res_config:
                 context[res_config["key"]] = res_output
-
+                
             return res_output
         if isinstance(v, str):
             return v.format(**context)
@@ -58,7 +63,7 @@ async def validate_output(output, rules, context):
     if "==" in rules:
         target = await resolve_val(rules["=="])
         if output != target: return False
-
+    
     # 2. Direct Inequality
     if "!=" in rules:
         target = await resolve_val(rules["!="])
@@ -118,3 +123,4 @@ async def validate_output(output, rules, context):
         if not passed: return False
 
     return True
+
