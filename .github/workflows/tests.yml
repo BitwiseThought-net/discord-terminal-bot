@@ -53,9 +53,11 @@ jobs:
       - name: Install Bot Dependencies
         run: |
           python -m pip install --upgrade pip
+          # This ensures 'pytest' exists when npm calls it
           pip install pytest pytest-asyncio discord.py python-dotenv requests
       - name: Run Bot Logic Unit Tests
-        run: PYTHONPATH=. pytest tests/
+        run: npm run test:bot
+#        run: PYTHONPATH=. pytest tests/
 
   test-suite:
     runs-on: ubuntu-latest
