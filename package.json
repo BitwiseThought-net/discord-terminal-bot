@@ -8,7 +8,6 @@
     "install:all": "npm install --no-audit && npm install --prefix editor --no-audit && npm install --prefix editor/dashboard --no-audit",
     "install:all:audit": "npm install && npm install --prefix editor && npm install --prefix editor/dashboard",
     "test:bot": "PYTHONPATH=. /bin/sh -c '[ -f .venv/bin/python3 ] && ./.venv/bin/python3 -m pytest tests/ || python3 -m pytest tests/'",
-    "test:bot:local": "PYTHONPATH=. ./.venv/bin/python3 -m pytest tests/",
     "test:editor": "npm install --prefix editor && npm test --prefix editor",
     "test:dashboard": "npm install --prefix editor/dashboard && npm test --prefix editor/dashboard -- --watchAll=false",
     "test:all": "npm run install:all && npm run test:editor && npm run test:dashboard && npm run test:bot",
