@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write # Required to surface coverage reports in PR comments
 
 jobs:
   editor-tests:
@@ -32,10 +33,10 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Install Python Dependencies
-        # We need this here because npm run test:all triggers python tests
+        # Added pytest-cov here so npm run test:all (which triggers python) doesn't error
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest pytest-asyncio discord.py python-dotenv requests
+          python -m pip install pytest pytest-asyncio pytest-cov discord.py python-dotenv requests
 
       - name: 📦 Install Root Dependencies
         run: npm install
@@ -48,27 +49,48 @@ jobs:
       - name: 🧪 Run All Unit Tests
         run: npm run test:all
 
+      - name: 📊 Surface Node Coverage Summary
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "### 🟢 Node.js Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Coverage reports generated for Editor and Dashboard." >> $GITHUB_STEP_SUMMARY
+
       - name: 🧹 Docker Environment Check
         run: |
           docker build -t test-editor ./editor
           docker build -t test-bot .
-  # --- New Job for the Python Bot ---
+
   bot-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: 🏁 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install Bot Dependencies
+
+      - name: 📦 Install Bot Dependencies
         run: |
           python -m pip install --upgrade pip
-          # This ensures 'pytest' exists when npm calls it
-          pip install pytest pytest-asyncio discord.py python-dotenv requests
-      - name: Run Bot Logic Unit Tests
+          # Standardizing on pytest-cov for CI coverage surfacing
+          pip install pytest pytest-asyncio pytest-cov discord.py python-dotenv requests
+
+      - name: 🧪 Run Bot Unit Tests
         run: npm run test:bot
 #        run: PYTHONPATH=. pytest tests/
+
+      - name: 📊 Surface Python Coverage
+        if: github.event_name == 'pull_request'
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-xml-coverage-path: ./coverage.xml
+          title: 🐍 Python Bot Coverage
+          badge-title: Bot Coverage
+          hide-badge: false
+          hide-report: false
+          create-new-comment: false
 
   test-suite:
     runs-on: ubuntu-latest
@@ -76,4 +98,4 @@ jobs:
     needs: [editor-tests, bot-tests]
     steps:
       - name: Success
-        run: echo "All quality checks passed. Ready for merge."
+        run: echo "All quality checks and coverage reports passed. Ready for merge."

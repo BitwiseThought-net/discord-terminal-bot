@@ -30,3 +30,8 @@ pip install pytest pytest-asyncio discord.py python-dotenv requests pytest-watch
 # Then run:
 # ptw
 
+#source .venv/bin/activate
+#pip install pytest-cov
+#npm run test:bot
+
+
