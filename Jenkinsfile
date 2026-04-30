@@ -15,8 +15,8 @@ pipeline {
                         sh "cp ${envFile} .env"
                         
                         // 2. Run docker compose (it will automatically pick up the .env file)
-                        //sh "docker compose up -d --build"
-                        sh 'commands/build.sh'
+                        sh "docker compose up -d --build"
+                        //sh 'commands/build.sh'
                         
                         // 3. Clean up the .env file after deployment (optional but safer)
                         sh "rm .env"
