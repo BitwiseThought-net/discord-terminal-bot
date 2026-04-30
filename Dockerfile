@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+ENV PYTHONPATH="/app"
+
 RUN sed -i 's/Components: main/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
