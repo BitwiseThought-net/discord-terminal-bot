@@ -7,16 +7,18 @@
     "prepare": "husky install",
     "install:all": "npm install --no-audit && npm install --prefix editor --no-audit && npm install --prefix editor/dashboard --no-audit",
     "install:all:audit": "npm install && npm install --prefix editor && npm install --prefix editor/dashboard",
-    "test:editor": "npm test --prefix editor",
-    "test:dashboard": "npm test --prefix editor/dashboard -- --watchAll=false",
-    "test:all": "npm run install:all && npm run test:editor && npm run test:dashboard",
+    "test:bot": "PYTHONPATH=. /bin/sh -c '[ -f .venv/bin/python3 ] && ./.venv/bin/python3 -m pytest tests/ || python3 -m pytest tests/'",
+    "test:editor": "npm install --prefix editor && npm test --prefix editor",
+    "test:dashboard": "npm install --prefix editor/dashboard && npm test --prefix editor/dashboard -- --watchAll=false",
+    "test:all": "npm run install:all && npm run test:editor && npm run test:dashboard && npm run test:bot",
     "docker:clean": "docker system prune -f",
     "docker:purge": "docker system prune -af --volumes",
     "docker:reset": "docker compose down -v && docker compose up --build -d",
     "clean:local": "rm -rf node_modules editor/node_modules editor/dashboard/node_modules editor/dashboard/build && docker compose run --rm discord-terminal-bot find . -name '__pycache__' -type d -exec rm -rf {} +"
-
   },
   "devDependencies": {
-    "husky": "^8.0.3"
+    "husky": "^8.0.3",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
   }
 }
