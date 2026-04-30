@@ -4,48 +4,52 @@ import json
 from lib.data_manager import load_data
 
 # Helper to create a temporary JSON file with duplicate keys
-# standard json.dump cannot create duplicates, so we write the string manually
 def create_duplicate_json(path):
     content = '{"cmd": {"param": "val1", "param": "val2"}}'
     with open(path, 'w') as f:
         f.write(content)
 
-def test_load_data_detects_duplicates(capsys, tmp_path):
+def test_load_data_detects_duplicates(caplog, tmp_path):
     """Verify that duplicate keys trigger a log warning when enabled."""
     json_file = tmp_path / "dup.json"
     create_duplicate_json(json_file)
     
-    # 1. Enable detection
+    # Enable detection
     os.environ['DETECT_DUPLICATES'] = 'True'
-    data = load_data(str(json_file))
+    
+    # We check the 'terminal_bot' logger at the WARNING level
+    with caplog.at_level("WARNING"):
+        data = load_data(str(json_file))
     
     # Verify 'last one wins' logic
     assert data["cmd"]["param"] == "val2"
     
-    # Verify console output (captured by pytest capsys fixture)
-    captured = capsys.readouterr()
-    assert "CRITICAL WARNING: Duplicate key 'param'" in captured.out
+    # Verify the log message exists in captured logs
+    assert "Duplicate key 'param'" in caplog.text
 
-def test_load_data_ignores_duplicates_when_disabled(capsys, tmp_path):
+def test_load_data_ignores_duplicates_when_disabled(caplog, tmp_path):
     """Verify that duplicate keys do NOT trigger a log warning when disabled."""
     json_file = tmp_path / "dup.json"
     create_duplicate_json(json_file)
     
-    # 2. Disable detection
+    # Disable detection
     os.environ['DETECT_DUPLICATES'] = 'False'
-    data = load_data(str(json_file))
+    
+    caplog.clear()
+    with caplog.at_level("WARNING"):
+        data = load_data(str(json_file))
     
     # Logic should still work
     assert data["cmd"]["param"] == "val2"
     
-    # Console should be clean
-    captured = capsys.readouterr()
-    assert "CRITICAL WARNING" not in captured.out
+    # Log should be empty of duplicate warnings
+    assert "Duplicate key" not in caplog.text
 
-def test_load_data_file_not_found(capsys):
+def test_load_data_file_not_found(caplog):
     """Verify warning when file is missing."""
-    data = load_data("non_existent_file.json")
+    caplog.clear()
+    with caplog.at_level("WARNING"):
+        data = load_data("non_existent_file.json")
+        
     assert data == {}
-    captured = capsys.readouterr()
-    assert "Configuration file NOT FOUND" in captured.out
-
+    assert "Configuration file NOT FOUND" in caplog.text
