@@ -2,7 +2,10 @@
 discord.py==2.4.0
 
 # --- Environment Management ---
-# Using python-dotenv to support local development outside of Docker
-# Required for .env file loading
 python-dotenv
 requests
+
+# --- Testing Suite (Required for CI/CD Quality Gate) ---
+pytest
+pytest-asyncio
+pytest-cov

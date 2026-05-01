@@ -7,6 +7,7 @@
     "prepare": "husky install",
     "install:all": "npm install --no-audit && npm install --prefix editor --no-audit && npm install --prefix editor/dashboard --no-audit",
     "install:all:audit": "npm install && npm install --prefix editor && npm install --prefix editor/dashboard",
+    "test:setup": "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
     "test:bot": "PYTHONPATH=. /bin/sh -c 'PYBIN=$([ -f .venv/bin/python3 ] && echo ./.venv/bin/python3 || echo python3); if $PYBIN -c \"import pytest_cov\" > /dev/null 2>&1; then $PYBIN -m pytest --cov=lib --cov-report=term --cov-report=xml:coverage.xml tests/; else $PYBIN -m pytest tests/; fi'",
     "test:editor": "npm install --prefix editor && npm test --prefix editor -- --coverage --watchAll=false --coverageReporters='text' 'lcov'",
     "test:dashboard": "npm install --prefix editor/dashboard && npm test --prefix editor/dashboard -- --coverage --watchAll=false --coverageReporters='text' 'lcov'",
