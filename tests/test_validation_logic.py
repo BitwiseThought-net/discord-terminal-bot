@@ -187,3 +187,99 @@ async def test_damerau_levenshtein_full_matrix():
     # other differences to ensure transposition is the chosen path in min().
     assert await validate_output("ab de", {"~=": "ba de"}, {}) is True
     assert await validate_output("abcde", {"~=": "axcde"}, {}) is True # Substitution winner
+
+@pytest.mark.asyncio
+async def test_contains_dict_result_failure():
+    """
+    Surgical strike on the final missing statement.
+    Triggers 'return False' when 'contains' is a dict (result) 
+    but the result is NOT in the output.
+    """
+    rules = {
+        "contains": {
+            "result": {"command": "echo 'SECRET_KEY'"}
+        }
+    }
+    # The output "public_data" does NOT contain "SECRET_KEY"
+    # This hits the 'if str(target) not in output: return False' line
+    assert await validate_output("public_data", rules, {}) is False
+
+@pytest.mark.asyncio
+async def test_numerical_operators_all_branches():
+    """Ensure every single numerical operator branch (>, <, >=, <=) is hit."""
+    # Hit >= fail
+    assert await validate_output("5", {">=": "10"}, {}) is False
+    # Hit <= fail
+    assert await validate_output("10", {"<=": "5"}, {}) is False
+    # Hit < fail
+    assert await validate_output("10", {"<": "5"}, {}) is False
+
+
+@pytest.mark.asyncio
+async def test_final_transposition_coverage():
+    """
+    Forces the final unvisited statement in Damerau-Levenshtein.
+    A 2-character swap ('ba' vs 'ab') ensures transposition is the 
+    winning calculation path for the matrix assignment.
+    """
+    # Distance is 1 via transposition. 
+    # Substitution would be 2. Deletion/Insertion would be 2.
+    # This forces the assignment: d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)
+    assert await validate_output("ba", {"~=": "ab"}, {}) is True
+
+@pytest.mark.asyncio
+async def test_numerical_bad_comparison_data():
+    """
+    Target the 'except: return False' in numerical ops.
+    Forces an error by comparing a number to a string that can't be resolved.
+    """
+    # This triggers the 'except' block because float() will fail inside the loop.
+    assert await validate_output("10", {">": "not-a-number"}, {}) is False
+
+@pytest.mark.asyncio
+async def test_contains_logic_and_failure_path():
+    """
+    Target the specific 'return False' for the 'and' branch in contains.
+    Requires hitting the list comprehension and the 'all()' check.
+    """
+    rules = {
+        "contains": {
+            "and": ["apple", "missing_fruit"]
+        }
+    }
+    # "apple" is there, but "missing_fruit" is not. 
+    # Hits: if not all(...): return False
+    assert await validate_output("I have an apple", rules, {}) is False
+
+@pytest.mark.asyncio
+async def test_resolve_val_string_interpolation_only():
+    """
+    Target the branch in resolve_val that handles a plain string 
+    with interpolation but NOT a result dictionary.
+    """
+    context = {"name": "world"}
+    # This forces resolve_val(v) to enter the 'if isinstance(v, str)' branch
+    # and execute 'v.format(**context)' directly.
+    rules = {"==": "hello {name}"}
+    assert await validate_output("hello world", rules, context) is True
+
+@pytest.mark.asyncio
+async def test_resolve_val_raw_types():
+    """
+    Targets the final 'return v' in resolve_val.
+    By passing an integer (not a str or dict), we force the fallback return.
+    """
+    # Passing 10 as a raw integer. resolve_val(10) hits 'return v'
+    # Then 'to_float' handles it, and the comparison (10 > 5) passes.
+    assert await validate_output("10", {">": 5}, {}) is True
+
+@pytest.mark.asyncio
+async def test_contains_logic_or_failure():
+    """Ensure we hit the 'False' branch of the 'or' logic inside contains."""
+    rules = {
+        "contains": {
+            "or": ["missing1", "missing2"]
+        }
+    }
+    # Hits: if not any(...): return False
+    assert await validate_output("fixed_string", rules, {}) is False
