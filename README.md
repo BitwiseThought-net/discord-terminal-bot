@@ -176,7 +176,7 @@ The bot monitors this file in the background. Adding a new top-level key registe
         "comment": "Admin-only AI access in a specific channel",
         "permissions": { "whitelist_roles": [999999999] },
         "commands": {
-          "ask": "python3 /app/commands/query_ollama.py --prompt"
+          "ask": "python3 /app/commands/ollama_client.py --prompt"
         }
       }
     ]
