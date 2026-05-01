@@ -42,6 +42,16 @@ The bot monitors this file in the background. Adding a new top-level key registe
 ### **Configuration Structure Example**
 ```json
 {
+  "*": {
+    "*": [
+      {
+        "comment": "Global shared commands, available to all slash-commands",
+        "commands": {
+          "date": { "command": "date" }
+        }
+      }
+    ]
+  },
   "play": {
     "parameter_name": "game",
     "loading_message": "🎲 *Rolling the dice...*",
@@ -50,14 +60,15 @@ The bot monitors this file in the background. Adding a new top-level key registe
         "comment": "Public games with a specific user blacklist",
         "permissions": { "blacklist_users": [333333333] },
         "commands": {
+          "GuessWhat": "echo 'Chicken butt!!'",
+          "moo": "fortune -a | cowsay",
+          "mooooooooooooooo": "fortune -l | cowsay",
           "no": "/app/commands/no-as-a-service.sh",
           "nooooooooooooooo": "/app/commands/no-as-a-service.sh | cowsay",
           "Roll a D20": { 
             "command": "bash -c 'echo $(( (RANDOM % 20) + 1 ))'",
             "prepend": "🎲 **Result:** "
           },
-          "GuessWhat": "echo 'Chicken butt!!'",
-          "moo": "fortune -a | cowsay",
           "Pig": {
             "command": "bash -c 'echo $(( (RANDOM % 6) + 1 ))'",
             "key": "die1",
