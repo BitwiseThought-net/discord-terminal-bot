@@ -108,3 +108,16 @@ def test_get_combined_blocks_no_global():
     assert len(blocks) == 1
     assert blocks[0]["commands"]["ping"] == "pong"
 
+def test_load_data_invalid_json(caplog):
+    """Target the JSONDecodeError branch."""
+    with open("invalid.json", "w") as f:
+        f.write("{ invalid json: [ }")
+    
+    data = load_data("invalid.json")
+    assert data == {}
+    assert "invalid JSON syntax" in caplog.text
+    os.remove("invalid.json")
+
+def test_get_combined_blocks_malformed_input():
+    """Target the 'if not isinstance(full_data, dict)' branch."""
+    assert get_combined_blocks("not a dict", "cmd", "123") == []

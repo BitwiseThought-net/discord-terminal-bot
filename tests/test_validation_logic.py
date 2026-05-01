@@ -1,5 +1,7 @@
 import pytest
-from lib.validation import validate_output
+import asyncio
+# ADDED: run_command to the imports
+from lib.validation import validate_output, run_command
 
 @pytest.mark.asyncio
 async def test_complex_logic_nesting():
@@ -20,9 +22,168 @@ async def test_complex_logic_nesting():
     assert await validate_output("30", rules, context) is False
 
 @pytest.mark.asyncio
-async def test_validation_float_error_handling(caplog):
+async def test_validation_float_error_handling():
     """Ensure numerical operators don't crash on non-numeric strings."""
     context = {}
     rules = {">": "5"}
-    # Comparing "abc" > 5 should return False gracefully, not crash
+    # Comparing "abc" > 5 should return False gracefully via the try/except block
     assert await validate_output("abc", rules, context) is False
+
+@pytest.mark.asyncio
+async def test_run_command_exception(caplog):
+    """Target the try/except block in run_command to hit 100% coverage."""
+    # Passing None forces an internal exception in the subprocess logic
+    with caplog.at_level("ERROR"):
+        result = await run_command(None)
+    
+    assert result == ""
+    assert "Validation Subprocess Error" in caplog.text
+
+@pytest.mark.asyncio
+async def test_within_operator():
+    """Verify 'within' operator (substring of target)."""
+    assert await validate_output("apple", {"within": "apple pie"}, {}) is True
+    assert await validate_output("orange", {"within": "apple pie"}, {}) is False
+
+@pytest.mark.asyncio
+async def test_logical_or_pass():
+    """Verify 'or' logic short-circuiting."""
+    rules = {"or": [{"==": "a"}, {"==": "b"}]}
+    # Matches 'a', so it should return True immediately
+    assert await validate_output("a", rules, {}) is True
+
+@pytest.mark.asyncio
+async def test_contains_logic_extended():
+    """Verify 'contains' with simple string and complex list objects."""
+    # Simple match
+    assert await validate_output("hello world", {"contains": "hello"}, {}) is True
+    
+    # List match (OR logic inside contains)
+    rules_or = {"contains": {"or": ["apple", "banana"]}}
+    assert await validate_output("I like bananas", rules_or, {}) is True
+    assert await validate_output("I like cherries", rules_or, {}) is False
+
+@pytest.mark.asyncio
+async def test_validation_missing_branches():
+    """Target the remaining logic branches in validation.py."""
+    ctx = {"target": "root"}
+
+    # 1. Fuzzy Matching Branch (~=)
+    assert await validate_output("helo", {"~=": "hello"}, {}) is True
+    assert await validate_output("abcdef", {"~=": "hello"}, {}) is False
+
+    # 2. Contains 'AND' logic failure branch
+    rules_and = {"contains": {"and": ["apple", "banana"]}}
+    assert await validate_output("I have an apple", rules_and, {}) is False
+
+    # 3. Logical 'OR' failure branch (All sub-rules fail)
+    rules_or = {"or": [{"==": "x"}, {"==": "y"}]}
+    assert await validate_output("z", rules_or, {}) is False
+
+    # 4. Logical 'AND' failure branch
+    rules_and_fail = {"and": [{"==": "a"}, {"==": "b"}]}
+    assert await validate_output("a", rules_and_fail, {}) is False
+
+    # 5. Result with interpolation branch
+    # This tests the resolve_val branch where command uses {key}
+    # Mocking run_command isn't needed if we use a simple echo
+    rules_res = {"==": {"result": {"command": "echo {target}", "key": "found"}}}
+    assert await validate_output("root", rules_res, ctx) is True
+    assert ctx["found"] == "root"
+
+@pytest.mark.asyncio
+async def test_fuzzy_transposition_branch():
+    """Target the transposition (swap) logic branch in Damerau-Levenshtein."""
+    # 'ca' -> 'ac' is a transposition (distance 1)
+    # This specifically triggers the 'if i > 0 and j > 0' logic path
+    assert await validate_output("ac", {"~=": "ca"}, {}) is True
+    
+    # 'tset' -> 'test' is another transposition
+    assert await validate_output("tset", {"~=": "test"}, {}) is True
+
+@pytest.mark.asyncio
+async def test_not_logic_failure():
+    """Ensure we hit the 'False' branch of the NOT operator."""
+    # Target the line: if await validate_output(...): return False
+    rules = {"not": {"==": "fail"}}
+    assert await validate_output("fail", rules, {}) is False
+
+@pytest.mark.asyncio
+async def test_fuzzy_matching_transposition_and_substitution():
+    """
+    Force the Damerau-Levenshtein transposition branch.
+    Strings need length > 2 to hit the 'i > 0 and j > 0' condition.
+    """
+    # 'bac' vs 'abc' is a transposition (distance 1)
+    assert await validate_output("bac", {"~=": "abc"}, {}) is True
+    
+    # 'aXbc' vs 'abXc' (transposition of internal characters)
+    assert await validate_output("abXc", {"~=": "aXbc"}, {}) is True
+
+@pytest.mark.asyncio
+async def test_validation_empty_rules():
+    """Hit the 'if not rules: return True' branch."""
+    assert await validate_output("anything", None, {}) is True
+
+@pytest.mark.asyncio
+async def test_fuzzy_substitution_cost_branch():
+    """
+    Specifically targets the substitution cost logic in Damerau-Levenshtein.
+    'ABC' -> 'AXC' is a pure substitution at index 1.
+    """
+    # 1. Direct substitution (Distance 1)
+    assert await validate_output("AXC", {"~=": "ABC"}, {}) is True
+    
+    # 2. Maximum allowed substitution (Distance 2)
+    # 'ABC' -> 'AXY' (B substituted for X, C substituted for Y)
+    assert await validate_output("AXY", {"~=": "ABC"}, {}) is True
+    
+    # 3. Beyond allowed substitution (Distance 3)
+    # 'ABC' -> 'XYZ'
+    assert await validate_output("XYZ", {"~=": "ABC"}, {}) is False
+
+@pytest.mark.asyncio
+async def test_force_transposition_assignment():
+    """
+    Forces the final unvisited statement in Damerau-Levenshtein.
+    Requires a swap ('ba' vs 'ab') where the transposition cost 
+    becomes the winning minimum value.
+    """
+    # Comparing 'abc' to 'bac'
+    # The transposition of 'a' and 'b' must be the winning path for the d[i,j] assignment.
+    assert await validate_output("bac", {"~=": "abc"}, {}) is True
+
+@pytest.mark.asyncio
+async def test_numeric_float_conversion_failure():
+    """
+    Ensures we hit the 'except: return False' in the numerical ops loop.
+    This happens if resolve_val returns something that float() hates.
+    """
+    # Rules expects a number, but we provide a string that can't be a float
+    assert await validate_output("10", {">": "not_a_number"}, {}) is False
+
+@pytest.mark.asyncio
+async def test_contains_result_object():
+    """
+    Target the branch: 
+    elif isinstance(cond, (str, dict)) and not any(k in cond for k in ["or", "and"]):
+    specifically for the 'dict' (result) case.
+    """
+    # 'contains' is a dict (result object), but NOT a logic dict (no and/or)
+    rules = {
+        "contains": {
+            "result": {"command": "echo 'target'"}
+        }
+    }
+    assert await validate_output("The target is here", rules, {}) is True
+
+@pytest.mark.asyncio
+async def test_damerau_levenshtein_full_matrix():
+    """
+    Force a complex Damerau-Levenshtein calculation to ensure every 
+    assignment and comparison in the matrix loop is hit.
+    """
+    # Swapping 'ba' to 'ab' in the middle of a string while having 
+    # other differences to ensure transposition is the chosen path in min().
+    assert await validate_output("ab de", {"~=": "ba de"}, {}) is True
+    assert await validate_output("abcde", {"~=": "axcde"}, {}) is True # Substitution winner
