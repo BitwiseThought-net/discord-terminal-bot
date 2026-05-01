@@ -18,7 +18,7 @@ const EXAMPLE_PATH = `${JSON_PATH}.example`;
 const COMMANDS_DIR = path.dirname(JSON_PATH);
 
 /**
- * Ensures the commands file exists. 
+ * Ensures the commands file exists.
  * Automatically initializes from .example if the main file is missing.
  */
 const ensureFileExists = () => {
@@ -74,7 +74,11 @@ app.get(/^\/(?!api).*/, (req, res) => {
  * SERVER START LOGIC
  * Only starts the listener if this file is run directly (node web-server.js).
  * This prevents Jest from throwing EACCES errors on Port 80 during tests.
+ * 
+ * We use 'istanbul ignore next' because this block is not executed during 
+ * unit testing (where the app is exported as a module).
  */
+/* istanbul ignore next */
 if (require.main === module) {
     const PORT = 80;
     app.listen(PORT, () => {

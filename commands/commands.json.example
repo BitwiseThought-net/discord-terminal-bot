@@ -1,4 +1,14 @@
 {
+  "*": {
+    "*": [
+      {
+        "comment": "Global shared commands, available to all slash-commands",
+        "commands": {
+          "date": { "command": "date" }
+        }
+      }
+    ]
+  },
   "play": {
     "parameter_name": "game",
     "loading_message": "🎲 *Rolling the dice...*",
@@ -18,7 +28,6 @@
           "Roll a D100": { "command": "bash -c 'echo $(( (RANDOM % 100) + 1 ))'", "prepend": "🎲 **D100 Roll:** " },
           "GuessWhat": "echo 'Chicken butt!!'",
           "regret": "echo 'You lost THE GAME'",
-          "date": "date",
           "moo": "fortune -a | cowsay",
           "mooooooooooooooo": "fortune -l | cowsay",
           "no": "/app/commands/no-as-a-service.sh",
