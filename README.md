@@ -1,3 +1,7 @@
+[![Tests](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml/badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml)
+[![Coverage](https://raw.githubusercontent.com/BitwiseThought-net/discord-terminal-bot/main/badges/coverage-badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml)
+[![Tests Passing](https://raw.githubusercontent.com/BitwiseThought-net/discord-terminal-bot/main/badges/tests-badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml)
+
 # 🤖 Discord Terminal Bot
 
 A **Programmable Discord-to-System Interface** designed to bridge the gap between chat-based interaction and server-side shell execution. This project provides a secure, modular framework for triggering, validating, and managing complex terminal operations through a structured automation engine.
