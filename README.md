@@ -1,6 +1,6 @@
-[![Tests](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml/badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml)
-[![Coverage](https://raw.githubusercontent.com/BitwiseThought-net/discord-terminal-bot/main/badges/coverage-badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml)
-[![Tests Passing](https://raw.githubusercontent.com/BitwiseThought-net/discord-terminal-bot/main/badges/tests-badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests.yml)
+[![Tests](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests-python.yml/badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests-python.yml)
+[![Coverage](https://raw.githubusercontent.com/BitwiseThought-net/discord-terminal-bot/refs/heads/main/badges/coverage-badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests-python.yml)
+[![Tests Passing](https://raw.githubusercontent.com/BitwiseThought-net/discord-terminal-bot/refs/heads/main/badges/tests-badge.svg)](https://github.com/BitwiseThought-net/discord-terminal-bot/actions/workflows/tests-python.yml)
 
 # 🤖 Discord Terminal Bot
 
