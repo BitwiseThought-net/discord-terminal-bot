@@ -29,7 +29,7 @@ When you click **Save Changes**:
 The Discord Bot (`bot.py`) completes the loop:
 * **File Watching:** The bot is configured to monitor the `COMMANDS_FILE` for changes.
 * **Hot-Reloading:** The moment the Editor writes the file to disk, the bot detects the update and reloads its command registry.
-* **Result:** Changes made in the web browser are live in Discord instantly—**without restarting the bot.**
+* **Result:** Changes made in the web browser are live in Discord instantly, **without restarting the bot.**
 
 ---
 
