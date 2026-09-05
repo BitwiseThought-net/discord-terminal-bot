@@ -5,10 +5,16 @@ on:
     types: [opened, synchronize, reopened]
     branches: 
       - '*'
+  push:
+    branches:
+      - main
+    # Prevents the badge-commit step below from re-triggering this workflow.
+    paths-ignore:
+      - 'badges/**'
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  contents: write # Required to commit refreshed coverage/tests badges back to the repo
   pull-requests: write # Required to surface coverage reports in PR comments
 
 jobs:
@@ -17,6 +23,11 @@ jobs:
     steps:
       - name: 🏁 Checkout Repository
         uses: actions/checkout@v4
+        with:
+          # On PRs, commit badge updates onto the PR branch itself so they land
+          # on main via the normal merge. On push (main), head_ref is empty and
+          # checkout falls back to the ref that triggered the run, i.e. main.
+          ref: ${{ github.head_ref }}
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -36,7 +47,7 @@ jobs:
       - name: 📦 Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest pytest-asyncio pytest-cov discord.py python-dotenv requests
+          python -m pip install pytest pytest-asyncio pytest-cov discord.py python-dotenv requests "genbadge[coverage,tests]"
 
       - name: 📦 Install Root Dependencies
         run: npm install
@@ -46,14 +57,55 @@ jobs:
           npm install --prefix editor
           npm install --prefix editor/dashboard
 
-      - name: 🧪 Run All Unit Tests
-        run: npm run test:all
+      # Bot, editor, and dashboard suites run as independent steps (rather than
+      # one chained `npm run test:all`) so that a failure in one suite doesn't
+      # prevent the others from running and writing their coverage/junit
+      # reports — those reports are what the badges below are generated from,
+      # and we want the badges to reflect a failure, not silently go stale
+      # because an earlier suite in the chain stopped everything else.
+      - name: 🐍 Run Bot Unit Tests
+        id: bot_tests
+        continue-on-error: true
+        run: npm run test:bot
+
+      - name: 🟢 Run Editor Unit Tests
+        id: editor_tests
+        continue-on-error: true
+        run: npm run test:editor
+
+      - name: 🖥️ Run Dashboard Unit Tests
+        id: dashboard_tests
+        continue-on-error: true
+        run: npm run test:dashboard
 
       - name: 📊 Surface Node Coverage Summary
         if: github.event_name == 'pull_request'
         run: |
           echo "### 🟢 Node.js Coverage Summary" >> $GITHUB_STEP_SUMMARY
           echo "Coverage reports generated for Editor and Dashboard." >> $GITHUB_STEP_SUMMARY
+
+      # Combines lib/ (Python) coverage + junit results with editor/web-server.js
+      # (Node API) coverage + junit results into badges/coverage-badge.svg and
+      # badges/tests-badge.svg — generated fresh from this run's actual results
+      # every time, not hardcoded. Scope matches the README's own coverage claim
+      # (Python bot + Node API); the React dashboard is tracked separately and
+      # isn't part of these two badges.
+      - name: 🏷️ Generate coverage & tests badges
+        if: always()
+        run: python3 scripts/generate_badges.py
+
+      - name: 💾 Commit updated badges
+        if: always() && (github.event_name == 'pull_request' || github.event_name == 'push')
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update coverage and test badges [skip ci]"
+          file_pattern: badges/*.svg
+
+      - name: 🚦 Fail job if any test suite failed
+        if: steps.bot_tests.outcome == 'failure' || steps.editor_tests.outcome == 'failure' || steps.dashboard_tests.outcome == 'failure'
+        run: |
+          echo "::error::One or more test suites failed — see the suite steps above for details."
+          exit 1
 
       - name: 🧹 Docker Environment Check
         run: |
