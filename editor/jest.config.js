@@ -8,5 +8,13 @@ module.exports = {
   testMatch: [
     "**/web-server.test.js"
   ],
-  testEnvironment: "node"
+  testEnvironment: "node",
+  // Cobertura output lets CI merge this coverage with the Python bot's
+  // coverage.xml into a single combined coverage badge. junit output lets
+  // CI merge test results with pytest's junit report into a single tests badge.
+  coverageReporters: ["text", "cobertura"],
+  reporters: [
+    "default",
+    ["jest-junit", { outputDirectory: ".", outputName: "junit.xml" }]
+  ]
 };

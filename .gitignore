@@ -47,3 +47,10 @@ coverage.xml
 coverage/
 editor/coverage/
 editor/dashboard/coverage/
+
+# Test/coverage reports consumed by scripts/generate_badges.py.
+# Regenerated on every CI run — only the resulting badges/*.svg are committed.
+pytest-results.xml
+editor/junit.xml
+badges/combined-coverage.xml
+badges/combined-junit.xml

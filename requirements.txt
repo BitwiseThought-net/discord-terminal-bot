@@ -9,3 +9,6 @@ requests
 pytest
 pytest-asyncio
 pytest-cov
+
+# --- Badge Generation (scripts/generate_badges.py) ---
+genbadge[coverage,tests]
