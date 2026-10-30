@@ -1,5 +1,5 @@
 # --- Discord Bot Core ---
-discord.py==2.4.0
+discord.py==2.7.1
 
 # --- Environment Management ---
 python-dotenv
